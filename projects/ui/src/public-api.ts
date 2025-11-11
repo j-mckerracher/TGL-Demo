@@ -18,3 +18,6 @@ export {
   type TakeawayV1,
 } from './lib/takeaway/takeaway.service';
 export { TakeawayComponent } from './lib/takeaway/takeaway.component';
+
+// Controls exports
+export { ControlsComponent } from './lib/controls/controls.component';

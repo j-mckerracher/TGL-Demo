@@ -39,11 +39,6 @@ class RenderingAdapterV1Impl implements RenderingAdapterV1 {
     this.canvas = canvas;
     this.theme = theme;
     this.isInitialized = true;
-
-    // Log initialization in development
-    if (typeof process !== 'undefined' && process.env['NODE_ENV'] !== 'production') {
-      console.log('[RenderingAdapterV1] Initialized with theme:', theme);
-    }
   }
 
   syncState(state: SimulationStateV1): void {
@@ -53,27 +48,12 @@ class RenderingAdapterV1Impl implements RenderingAdapterV1 {
     }
 
     this.currentState = state;
-
-    // Log state sync in development
-    if (typeof process !== 'undefined' && process.env['NODE_ENV'] !== 'production') {
-      console.log(
-        '[RenderingAdapterV1] State synced - round:',
-        state.roundIndex,
-        'phase:',
-        state.phase
-      );
-    }
   }
 
   renderFrame(): void {
     // Safe no-op if not initialized
     if (!this.isInitialized) {
       return;
-    }
-
-    // Log render in development
-    if (typeof process !== 'undefined' && process.env['NODE_ENV'] !== 'production') {
-      console.log('[RenderingAdapterV1] renderFrame called');
     }
 
     // Stub: actual rendering logic will be added in future units
@@ -90,11 +70,6 @@ class RenderingAdapterV1Impl implements RenderingAdapterV1 {
   renderDiscrete(): void {
     // Explicitly safe no-op even if not initialized
     // This is for reduced-motion accessibility mode
-
-    // Log render in development
-    if (typeof process !== 'undefined' && process.env['NODE_ENV'] !== 'production') {
-      console.log('[RenderingAdapterV1] renderDiscrete called');
-    }
 
     // Stub: actual discrete rendering logic will be added in future units
     // No animation loop - just render current state once
@@ -118,11 +93,6 @@ class RenderingAdapterV1Impl implements RenderingAdapterV1 {
     this.theme = undefined;
     this.currentState = undefined;
     this.isInitialized = false;
-
-    // Log disposal in development
-    if (typeof process !== 'undefined' && process.env['NODE_ENV'] !== 'production') {
-      console.log('[RenderingAdapterV1] Disposed');
-    }
   }
 
   capabilities(): RenderingCapabilities {

@@ -1,0 +1,90 @@
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "paths": {
+      "a11y": [
+        "./dist/a11y"
+      ],
+      "config": [
+        "./dist/config"
+      ],
+      "fallback": [
+        "./dist/fallback"
+      ],
+      "rendering": [
+        "./dist/rendering"
+      ],
+      "simulation": [
+        "./dist/simulation"
+      ],
+      "ui": [
+        "./dist/ui"
+      ]
+    },
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve"
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "typeCheckHostBindings": true,
+    "strictTemplates": true
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./projects/tgl-results-explorer-web/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/tgl-results-explorer-web/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/simulation/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/simulation/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/rendering/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/rendering/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/ui/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/ui/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/a11y/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/a11y/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/fallback/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/fallback/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/config/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/config/tsconfig.spec.json"
+    }
+  ]
+}

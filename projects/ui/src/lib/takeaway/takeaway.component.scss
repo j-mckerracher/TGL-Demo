@@ -1,0 +1,41 @@
+/**
+ * Styles for Takeaway component.
+ */
+
+:host {
+  display: block;
+}
+
+.takeaway {
+  padding: 1rem;
+  margin: 1rem 0;
+  background-color: #f0f9ff;
+  border-left: 4px solid #3b82f6;
+  border-radius: 4px;
+}
+
+.takeaway-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.takeaway-message {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.takeaway-details {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #4b5563;
+}

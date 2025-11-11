@@ -1,0 +1,8 @@
+<div class="takeaway" *ngIf="takeaway">
+  <h3 class="takeaway-title">Key Takeaway</h3>
+  <p class="takeaway-message">{{ message }}</p>
+  <p class="takeaway-details" *ngIf="includeAbsolutes && takeaway.absEdgesA !== undefined">
+    <span class="detail-label">Mechanism:</span> {{ takeaway.absEdgesA }} edges |
+    <span class="detail-label">P2P:</span> {{ takeaway.absEdgesB }} edges
+  </p>
+</div>

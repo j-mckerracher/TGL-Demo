@@ -9,7 +9,8 @@
     "build:prod": "ng build tgl-results-explorer-web --configuration production",
     "lint": "ng lint",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
-    "perf": "ts-node tools/fps-harness/index.ts"
+    "perf": "ts-node tools/fps-harness/index.ts",
+    "spike:rendering": "ts-node --project tools/tsconfig.json tools/rendering-spike/compare.ts"
   },
   "prettier": {
     "printWidth": 100,

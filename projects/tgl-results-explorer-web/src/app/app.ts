@@ -19,7 +19,7 @@ import { Observable } from 'rxjs';
 import type { SimulationStateV1, RunSummaryV1 } from 'simulation';
 
 // UI components
-import { ControlsComponent } from 'ui';
+import { ControlsComponent, type ControlsParameters } from 'ui';
 import { MicroLineChartComponent, type ChartSeries } from 'ui';
 import { TakeawayComponent } from 'ui';
 
@@ -108,6 +108,21 @@ export class App implements OnInit {
    */
   readonly isRunning = computed(() => this.engineController.isRunning());
 
+  /**
+   * Computed signal for controls parameters.
+   */
+  readonly controlsParameters = computed<ControlsParameters>(() => {
+    const params = this.paramsStore.parameters();
+    return {
+      seed: params.seed,
+      nodeCounts: params.nodeCounts,
+      phaseBudgets: params.phaseBudgets,
+      p2pDegree: params.p2pDegree,
+      epsilon: params.epsilon,
+      reducedMotionEnabled: params.reducedMotionEnabled,
+    };
+  });
+
   constructor() {
     // React to engine state changes to update stats and summaries
     effect(() => {
@@ -124,5 +139,35 @@ export class App implements OnInit {
 
     // Initialize engine controller
     this.engineController.initialize();
+  }
+
+  /**
+   * Handle parameter changes from controls component.
+   */
+  onParametersChange(params: Partial<ControlsParameters>): void {
+    this.paramsStore.updateParameters(params);
+  }
+
+  /**
+   * Handle run button click from controls component.
+   */
+  onRun(): void {
+    this.engineController.initialize();
+    this.engineController.start();
+  }
+
+  /**
+   * Handle reset button click from controls component.
+   */
+  onReset(): void {
+    this.engineController.reset();
+    this.errorService.reset();
+  }
+
+  /**
+   * Handle generate new seed request from controls component.
+   */
+  onGenerateNewSeed(): void {
+    this.paramsStore.generateNewSeed();
   }
 }

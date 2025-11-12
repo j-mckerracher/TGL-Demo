@@ -16,7 +16,7 @@
           type="button"
           (click)="onGenerateNewSeed()"
           class="btn btn-secondary"
-          [disabled]="isRunning()"
+          [disabled]="isRunning"
         >
           Generate New
         </button>
@@ -34,7 +34,7 @@
           id="mechanismNodes"
           type="number"
           formControlName="mechanism"
-          [disabled]="fallbackActive || isRunning()"
+          [disabled]="fallbackActive || isRunning"
           class="form-control"
           min="10"
           max="200"
@@ -53,7 +53,7 @@
           id="p2pNodes"
           type="number"
           formControlName="p2p"
-          [disabled]="fallbackActive || isRunning()"
+          [disabled]="fallbackActive || isRunning"
           class="form-control"
           min="10"
           max="200"
@@ -78,7 +78,7 @@
           id="setupBudget"
           type="number"
           formControlName="setup"
-          [disabled]="fallbackActive || isRunning()"
+          [disabled]="fallbackActive || isRunning"
           class="form-control"
           min="1"
           max="100"
@@ -97,7 +97,7 @@
           id="runBudget"
           type="number"
           formControlName="run"
-          [disabled]="fallbackActive || isRunning()"
+          [disabled]="fallbackActive || isRunning"
           class="form-control"
           min="1"
           max="1000"
@@ -121,7 +121,7 @@
         id="p2pDegree"
         type="number"
         formControlName="p2pDegree"
-        [disabled]="fallbackActive || isRunning()"
+        [disabled]="fallbackActive || isRunning"
         class="form-control"
         min="1"
         max="20"
@@ -140,7 +140,7 @@
         id="epsilon"
         type="number"
         formControlName="epsilon"
-        [disabled]="fallbackActive || isRunning()"
+        [disabled]="fallbackActive || isRunning"
         class="form-control"
         min="0.001"
         max="0.5"
@@ -160,7 +160,7 @@
           id="reducedMotion"
           type="checkbox"
           formControlName="reducedMotionEnabled"
-          [disabled]="isRunning()"
+          [disabled]="isRunning"
         />
         Reduced Motion Mode
       </label>
@@ -172,7 +172,7 @@
     <button
       type="button"
       (click)="onRun()"
-      [disabled]="!form.valid || isRunning()"
+      [disabled]="!form.valid || isRunning"
       class="btn btn-primary"
     >
       Run
@@ -180,7 +180,7 @@
     <button
       type="button"
       (click)="onReset()"
-      [disabled]="!isRunning()"
+      [disabled]="!isRunning"
       class="btn btn-secondary"
     >
       Reset

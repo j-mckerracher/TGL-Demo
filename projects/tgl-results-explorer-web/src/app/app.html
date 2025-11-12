@@ -13,7 +13,13 @@
     <!-- Left Panel: Controls -->
     <aside class="controls-panel">
       <controls
-        [fallbackActive]="isFallbackActive()">
+        [fallbackActive]="isFallbackActive()"
+        [isRunning]="isRunning()"
+        [parameters]="controlsParameters()"
+        (parametersChange)="onParametersChange($event)"
+        (run)="onRun()"
+        (reset)="onReset()"
+        (generateNewSeed)="onGenerateNewSeed()">
       </controls>
     </aside>
 

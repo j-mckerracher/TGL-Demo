@@ -1,0 +1,40 @@
+[
+  {
+    "name": "2D",
+    "library": "Pixi.js",
+    "metricsResult": {
+      "averageFps": 60,
+      "minFps": 58,
+      "maxFps": 62,
+      "peakMemory": 165,
+      "bundleSize": 150,
+      "totalTime": 30
+    },
+    "supportMatrix": {
+      "chrome": true,
+      "firefox": true,
+      "safari": true,
+      "edge": true,
+      "mobileSupport": true
+    }
+  },
+  {
+    "name": "3D",
+    "library": "Three.js",
+    "metricsResult": {
+      "averageFps": 65,
+      "minFps": 60,
+      "maxFps": 70,
+      "peakMemory": 210,
+      "bundleSize": 500,
+      "totalTime": 30
+    },
+    "supportMatrix": {
+      "chrome": true,
+      "firefox": true,
+      "safari": true,
+      "edge": true,
+      "mobileSupport": true
+    }
+  }
+]

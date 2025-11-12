@@ -1,0 +1,12 @@
+<div
+  class="fallback-banner"
+  *ngIf="fallbackService.isFallbackActive()"
+  role="status"
+  aria-live="polite"
+>
+  <div class="banner-icon">⚠️</div>
+  <div class="banner-content">
+    <p class="banner-message">{{ message }}</p>
+    <p class="banner-details">{{ details }}</p>
+  </div>
+</div>

@@ -1,0 +1,10 @@
+<div class="offline-banner" *ngIf="isOffline | async" role="status" aria-live="polite">
+  <span class="icon">⚠️</span>
+  <p>You are offline. The app will continue to work with cached data.</p>
+</div>
+
+<div class="update-banner" *ngIf="updateAvailable | async" role="status" aria-live="polite">
+  <span class="icon">ℹ️</span>
+  <p>A new version is available.</p>
+  <button (click)="onUpdateClick()">Update</button>
+</div>

@@ -4,15 +4,15 @@
  * Provides Run/Reset buttons and advanced parameter controls with reactive forms.
  * Features:
  * - Form validation with bounds checking
- * - Debounced parameter updates to ParamsStore
- * - Run/Reset integration with EngineController
+ * - Debounced parameter updates via outputs
+ * - Run/Reset integration via outputs
  * - Fallback mode support (disables advanced controls)
  * - Keyboard-first navigation
  *
  * Version: v1.0
  */
 
-import { Component, Input, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -21,8 +21,24 @@ import {
   Validators,
 } from '@angular/forms';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
-import { ParamsStore } from '../../../../tgl-results-explorer-web/src/app/state/params.store';
-import { EngineController } from '../../../../tgl-results-explorer-web/src/app/state/engine.controller';
+
+/**
+ * Simulation parameters interface (subset needed for controls)
+ */
+export interface ControlsParameters {
+  seed: number;
+  nodeCounts: {
+    mechanism: number;
+    p2p: number;
+  };
+  phaseBudgets: {
+    setup: number;
+    run: number;
+  };
+  p2pDegree: number;
+  epsilon: number;
+  reducedMotionEnabled: boolean;
+}
 
 @Component({
   selector: 'controls',
@@ -31,31 +47,35 @@ import { EngineController } from '../../../../tgl-results-explorer-web/src/app/s
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
 })
-export class ControlsComponent implements OnInit, OnDestroy {
+export class ControlsComponent implements OnInit, OnDestroy, OnChanges {
   @Input() fallbackActive: boolean = false;
+  @Input() isRunning: boolean = false;
+  @Input() parameters?: ControlsParameters;
+
+  @Output() parametersChange = new EventEmitter<Partial<ControlsParameters>>();
+  @Output() run = new EventEmitter<void>();
+  @Output() reset = new EventEmitter<void>();
+  @Output() generateNewSeed = new EventEmitter<void>();
 
   form!: FormGroup;
   private destroy$ = new Subject<void>();
-
-  constructor(
-    private fb: FormBuilder,
-    private paramsStore: ParamsStore,
-    private engineController: EngineController
-  ) {
-    // React to parameter store changes
-    effect(() => {
-      const params = this.paramsStore.parameters();
-      if (this.form && !this.formChangeInProgress) {
-        this.updateFormFromParams(params);
-      }
-    });
-  }
-
   private formChangeInProgress = false;
+
+  constructor(private fb: FormBuilder) {}
 
   ngOnInit(): void {
     this.initializeForm();
     this.setupFormValueChanges();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Update form when parameters input changes
+    if (changes['parameters'] && !changes['parameters'].firstChange && this.form) {
+      const params = changes['parameters'].currentValue;
+      if (params && !this.formChangeInProgress) {
+        this.updateFormFromParams(params);
+      }
+    }
   }
 
   ngOnDestroy(): void {
@@ -67,7 +87,14 @@ export class ControlsComponent implements OnInit, OnDestroy {
    * Initialize form with validation.
    */
   private initializeForm(): void {
-    const params = this.paramsStore.parameters();
+    const params = this.parameters || {
+      seed: 12345,
+      nodeCounts: { mechanism: 100, p2p: 100 },
+      phaseBudgets: { setup: 10, run: 100 },
+      p2pDegree: 4,
+      epsilon: 0.01,
+      reducedMotionEnabled: false,
+    };
 
     this.form = this.fb.group({
       seed: [{ value: params.seed, disabled: true }], // Read-only
@@ -112,22 +139,25 @@ export class ControlsComponent implements OnInit, OnDestroy {
       .subscribe((value) => {
         if (this.form.valid) {
           this.formChangeInProgress = true;
-          this.paramsStore.updateParameters({
+          this.parametersChange.emit({
             nodeCounts: value.nodeCounts,
             phaseBudgets: value.phaseBudgets,
             p2pDegree: value.p2pDegree,
             epsilon: value.epsilon,
             reducedMotionEnabled: value.reducedMotionEnabled,
           });
-          this.formChangeInProgress = false;
+          // Small delay to prevent immediate re-update
+          setTimeout(() => {
+            this.formChangeInProgress = false;
+          }, 50);
         }
       });
   }
 
   /**
-   * Update form from parameter store (without triggering change events).
+   * Update form from parameters (without triggering change events).
    */
-  private updateFormFromParams(params: any): void {
+  private updateFormFromParams(params: ControlsParameters): void {
     this.form.patchValue(
       {
         seed: params.seed,
@@ -145,33 +175,24 @@ export class ControlsComponent implements OnInit, OnDestroy {
    * Handle Run button click.
    */
   onRun(): void {
-    if (!this.form.valid || this.isRunning()) {
+    if (!this.form.valid || this.isRunning) {
       return;
     }
-
-    this.engineController.initialize();
-    this.engineController.start();
+    this.run.emit();
   }
 
   /**
    * Handle Reset button click.
    */
   onReset(): void {
-    this.engineController.reset();
+    this.reset.emit();
   }
 
   /**
    * Handle Generate New Seed button click.
    */
   onGenerateNewSeed(): void {
-    this.paramsStore.generateNewSeed();
-  }
-
-  /**
-   * Get isRunning signal from engine controller.
-   */
-  isRunning(): boolean {
-    return this.engineController.isRunning();
+    this.generateNewSeed.emit();
   }
 
   /**

@@ -6,7 +6,8 @@
     "serve": "ng serve tgl-results-explorer-web",
     "build:prod": "ng build tgl-results-explorer-web --configuration production",
     "lint": "ng lint",
-    "test:ci": "ng test --watch=false --browsers=ChromeHeadless"
+    "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
+    "perf": "ts-node tools/fps-harness/index.ts"
   },
   "prettier": {
     "printWidth": 100,

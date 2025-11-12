@@ -93,6 +93,11 @@
             ],
             "styles": [
               "projects/tgl-results-explorer-web/src/styles.scss"
+            ],
+            "codeCoverage": true,
+            "codeCoverageExclude": [
+              "**/*.spec.ts",
+              "**/test/**"
             ]
           }
         },
@@ -132,6 +137,11 @@
             "polyfills": [
               "zone.js",
               "zone.js/testing"
+            ],
+            "codeCoverage": true,
+            "codeCoverageExclude": [
+              "**/*.spec.ts",
+              "**/test/**"
             ]
           }
         }
@@ -162,6 +172,11 @@
             "polyfills": [
               "zone.js",
               "zone.js/testing"
+            ],
+            "codeCoverage": true,
+            "codeCoverageExclude": [
+              "**/*.spec.ts",
+              "**/test/**"
             ]
           }
         }
@@ -192,6 +207,11 @@
             "polyfills": [
               "zone.js",
               "zone.js/testing"
+            ],
+            "codeCoverage": true,
+            "codeCoverageExclude": [
+              "**/*.spec.ts",
+              "**/test/**"
             ]
           }
         }
@@ -222,6 +242,11 @@
             "polyfills": [
               "zone.js",
               "zone.js/testing"
+            ],
+            "codeCoverage": true,
+            "codeCoverageExclude": [
+              "**/*.spec.ts",
+              "**/test/**"
             ]
           }
         }
@@ -252,6 +277,11 @@
             "polyfills": [
               "zone.js",
               "zone.js/testing"
+            ],
+            "codeCoverage": true,
+            "codeCoverageExclude": [
+              "**/*.spec.ts",
+              "**/test/**"
             ]
           }
         }
@@ -282,6 +312,11 @@
             "polyfills": [
               "zone.js",
               "zone.js/testing"
+            ],
+            "codeCoverage": true,
+            "codeCoverageExclude": [
+              "**/*.spec.ts",
+              "**/test/**"
             ]
           }
         }

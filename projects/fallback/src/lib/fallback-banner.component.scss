@@ -1,0 +1,53 @@
+/**
+ * Fallback Banner Styles.
+ *
+ * Provides a visible but non-obtrusive warning banner
+ * when the application is in fallback mode.
+ */
+
+.fallback-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+
+  .banner-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .banner-content {
+    flex: 1;
+
+    .banner-message {
+      margin: 0 0 0.25rem 0;
+      font-weight: 600;
+      color: #856404;
+      font-size: 0.95rem;
+    }
+
+    .banner-details {
+      margin: 0;
+      color: #856404;
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+  }
+}
+
+/* Responsive: stack on mobile */
+@media (max-width: 480px) {
+  .fallback-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+
+    .banner-icon {
+      font-size: 1.25rem;
+    }
+  }
+}

@@ -95,6 +95,15 @@
               "projects/tgl-results-explorer-web/src/styles.scss"
             ]
           }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/tgl-results-explorer-web/**/*.ts",
+              "projects/tgl-results-explorer-web/**/*.html"
+            ]
+          }
         }
       }
     },

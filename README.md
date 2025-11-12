@@ -7,10 +7,24 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 To start a local development server, run:
 
 ```bash
-ng serve
+npm run serve
 ```
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+
+### Library Dependencies
+
+This project uses a monorepo structure with multiple Angular libraries (`simulation`, `ui`, `rendering`, `fallback`, `config`, `a11y`). These libraries need to be built before the main application can import them.
+
+**Automatic builds:** The `postinstall` script automatically builds all libraries after running `npm install`, ensuring the libraries are ready when you clone the repository.
+
+**Manual builds:** If you modify any library code, rebuild all libraries with:
+
+```bash
+npm run build:libs
+```
+
+This ensures the `dist` folder contains the latest compiled library outputs that the main application depends on.
 
 ## Code scaffolding
 

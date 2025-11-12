@@ -10,7 +10,8 @@
     "lint": "ng lint",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
     "perf": "ts-node tools/fps-harness/index.ts",
-    "spike:rendering": "ts-node --project tools/tsconfig.json tools/rendering-spike/compare.ts"
+    "spike:rendering": "ts-node --project tools/tsconfig.json tools/rendering-spike/compare.ts",
+    "spike:chart": "ts-node --project tools/tsconfig.json tools/chart-spike/compare.ts"
   },
   "prettier": {
     "printWidth": 100,

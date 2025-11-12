@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Custom Canvas2D",
+    "library": "Custom (U09)",
+    "metricsResult": {
+      "averageRedrawTime": 0.05141852666666788,
+      "measuredFps": 19014.056109075507,
+      "cpuUsagePercent": 0.0771277900000018,
+      "memoryPeak": 2.5,
+      "bundleSize": 5,
+      "throttleStability": false
+    }
+  },
+  {
+    "name": "Chart.js",
+    "library": "Chart.js 4.x",
+    "metricsResult": {
+      "averageRedrawTime": 0.051412333333322145,
+      "measuredFps": 19174.660827274958,
+      "cpuUsagePercent": 0.07711849999998321,
+      "memoryPeak": 8.5,
+      "bundleSize": 55,
+      "throttleStability": false
+    }
+  }
+]

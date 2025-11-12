@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "postinstall": "npm run build:libs",
+    "build:libs": "ng build simulation --configuration development && ng build ui --configuration development && ng build rendering --configuration development && ng build fallback --configuration development && ng build config --configuration development && ng build a11y --configuration development",
     "serve": "ng serve tgl-results-explorer-web",
     "build:prod": "ng build tgl-results-explorer-web --configuration production",
     "lint": "ng lint",

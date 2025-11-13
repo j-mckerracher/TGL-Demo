@@ -65,6 +65,7 @@ export class ControlsComponent implements OnInit, OnDestroy, OnChanges {
 
   ngOnInit(): void {
     this.initializeForm();
+    this.updateControlStates();
     this.setupFormValueChanges();
   }
 
@@ -75,6 +76,10 @@ export class ControlsComponent implements OnInit, OnDestroy, OnChanges {
       if (params && !this.formChangeInProgress) {
         this.updateFormFromParams(params);
       }
+    }
+
+    if ((changes['fallbackActive'] || changes['isRunning']) && this.form) {
+      this.updateControlStates();
     }
   }
 
@@ -136,15 +141,16 @@ export class ControlsComponent implements OnInit, OnDestroy, OnChanges {
   private setupFormValueChanges(): void {
     this.form.valueChanges
       .pipe(debounceTime(300), takeUntil(this.destroy$))
-      .subscribe((value) => {
+      .subscribe(() => {
         if (this.form.valid) {
+          const rawValue = this.form.getRawValue();
           this.formChangeInProgress = true;
           this.parametersChange.emit({
-            nodeCounts: value.nodeCounts,
-            phaseBudgets: value.phaseBudgets,
-            p2pDegree: value.p2pDegree,
-            epsilon: value.epsilon,
-            reducedMotionEnabled: value.reducedMotionEnabled,
+            nodeCounts: rawValue.nodeCounts,
+            phaseBudgets: rawValue.phaseBudgets,
+            p2pDegree: rawValue.p2pDegree,
+            epsilon: rawValue.epsilon,
+            reducedMotionEnabled: rawValue.reducedMotionEnabled,
           });
           // Small delay to prevent immediate re-update
           setTimeout(() => {
@@ -172,12 +178,45 @@ export class ControlsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
+   * Check if form data is valid (ignoring disabled state).
+   * Disabled controls shouldn't affect validity for the Run button.
+   */
+  isFormDataValid(): boolean {
+    // Get all form values including disabled ones
+    const rawValue = this.form.getRawValue();
+
+    // Check if all enabled controls have valid values
+    const nodeCounts = this.form.get('nodeCounts');
+    const phaseBudgets = this.form.get('phaseBudgets');
+    const p2pDegree = this.form.get('p2pDegree');
+    const epsilon = this.form.get('epsilon');
+
+    // If a control is disabled, don't check its validity
+    const nodeCountsValid = !nodeCounts?.enabled || nodeCounts.valid;
+    const phaseBudgetsValid = !phaseBudgets?.enabled || phaseBudgets.valid;
+    const p2pDegreeValid = !p2pDegree?.enabled || p2pDegree.valid;
+    const epsilonValid = !epsilon?.enabled || epsilon.valid;
+
+    const isValid = nodeCountsValid && phaseBudgetsValid && p2pDegreeValid && epsilonValid;
+    console.log('[Controls] isFormDataValid() result:', isValid, {
+      nodeCountsValid,
+      phaseBudgetsValid,
+      p2pDegreeValid,
+      epsilonValid,
+    });
+    return isValid;
+  }
+
+  /**
    * Handle Run button click.
    */
   onRun(): void {
-    if (!this.form.valid || this.isRunning) {
+    console.log('[Controls] onRun() called - isFormDataValid:', this.isFormDataValid(), 'isRunning:', this.isRunning);
+    if (!this.isFormDataValid() || this.isRunning) {
+      console.log('[Controls] onRun() - BLOCKED: validation failed or already running');
       return;
     }
+    console.log('[Controls] onRun() - EMITTING run event');
     this.run.emit();
   }
 
@@ -193,6 +232,40 @@ export class ControlsComponent implements OnInit, OnDestroy, OnChanges {
    */
   onGenerateNewSeed(): void {
     this.generateNewSeed.emit();
+  }
+
+  /**
+   * Enable or disable form controls based on component inputs.
+   */
+  private updateControlStates(): void {
+    if (!this.form) {
+      return;
+    }
+
+    const disableAdvancedControls = this.fallbackActive || this.isRunning;
+
+    this.toggleControlState('nodeCounts', disableAdvancedControls);
+    this.toggleControlState('phaseBudgets', disableAdvancedControls);
+    this.toggleControlState('p2pDegree', disableAdvancedControls);
+    this.toggleControlState('epsilon', disableAdvancedControls);
+
+    this.toggleControlState('reducedMotionEnabled', this.isRunning);
+  }
+
+  /**
+   * Helper to enable/disable a control without emitting events.
+   */
+  private toggleControlState(controlPath: string, disable: boolean): void {
+    const control = this.form.get(controlPath);
+    if (!control) {
+      return;
+    }
+
+    if (disable && control.enabled) {
+      control.disable({ emitEvent: false });
+    } else if (!disable && control.disabled) {
+      control.enable({ emitEvent: false });
+    }
   }
 
   /**

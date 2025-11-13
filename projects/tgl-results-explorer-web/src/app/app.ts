@@ -13,7 +13,7 @@
  * Version: v1.0
  */
 
-import { Component, OnInit, signal, computed, effect, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, effect, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import type { SimulationStateV1, RunSummaryV1 } from 'simulation';
@@ -62,6 +62,10 @@ import { TakeawayService } from 'ui';
   ],
 })
 export class App implements OnInit {
+  // Canvas component references for rendering initialization
+  @ViewChild(MechanismCanvasComponent) mechanismCanvas?: MechanismCanvasComponent;
+  @ViewChild(P2PCanvasComponent) p2pCanvas?: P2PCanvasComponent;
+
   // Inject services using inject() function
   private readonly engineController = inject(EngineController);
   private readonly paramsStore = inject(ParamsStore);
@@ -72,8 +76,12 @@ export class App implements OnInit {
 
   /**
    * Observable stream of engine state.
+   * Must be a getter to always return the current engine's state observable,
+   * since the engine is recreated on each initialize() call.
    */
-  readonly engineState$: Observable<SimulationStateV1> = this.engineController.engineState$;
+  get engineState$(): Observable<SimulationStateV1> {
+    return this.engineController.engineState$;
+  }
 
   /**
    * Signal tracking whether stats chart should be visible.
@@ -152,16 +160,37 @@ export class App implements OnInit {
    * Handle run button click from controls component.
    */
   onRun(): void {
+    console.log('[App] onRun() called');
+    console.log('[App] engineController.isRunning():', this.engineController.isRunning());
+
+    // Dispose old adapters first to reset their state
+    console.log('[App] Disposing old canvas adapters');
+    this.mechanismCanvas?.dispose();
+    this.p2pCanvas?.dispose();
+
+    // Initialize fresh canvas adapters for rendering
+    console.log('[App] Initializing canvas adapters');
+    this.mechanismCanvas?.initAdapter();
+    this.p2pCanvas?.initAdapter();
+    console.log('[App] Canvas adapters initialized');
+
     this.engineController.initialize();
+    console.log('[App] After initialize() - engineController.isRunning():', this.engineController.isRunning());
     this.engineController.start();
+    console.log('[App] After start() - engineController.isRunning():', this.engineController.isRunning());
   }
 
   /**
    * Handle reset button click from controls component.
    */
   onReset(): void {
+    console.log('[App] onReset() called');
     this.engineController.reset();
     this.errorService.reset();
+    // Dispose canvas adapters to clean up rendering resources
+    console.log('[App] Disposing canvas adapters');
+    this.mechanismCanvas?.dispose();
+    this.p2pCanvas?.dispose();
   }
 
   /**

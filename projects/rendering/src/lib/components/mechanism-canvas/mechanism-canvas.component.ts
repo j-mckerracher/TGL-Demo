@@ -69,29 +69,40 @@ export class MechanismCanvasComponent implements AfterViewInit, OnDestroy {
    * Called on first Run signal (lazy initialization).
    */
   initAdapter(): void {
+    console.log('[MechanismCanvas] initAdapter() called - isAdapterInitialized:', this.isAdapterInitialized, 'canvasRef:', !!this.canvasRef);
+
     if (this.isAdapterInitialized || !this.canvasRef) {
+      console.log('[MechanismCanvas] initAdapter() - SKIPPED (already initialized or no canvas ref)');
       return;
     }
 
     // Create and initialize adapter
+    console.log('[MechanismCanvas] Creating adapter and initializing with canvas');
     this.adapter = createRenderingAdapterV1();
     this.adapter.init(this.canvasRef.nativeElement, this.theme);
     this.isAdapterInitialized = true;
+    console.log('[MechanismCanvas] Adapter initialized');
 
     // Subscribe to simulation state if provided
     if (this.simulationState$) {
+      console.log('[MechanismCanvas] Subscribing to simulationState$ stream');
       this.stateSubscription = this.simulationState$.subscribe((state) => {
+        console.log('[MechanismCanvas] Received state:', state);
         if (this.adapter) {
           this.adapter.syncState(state);
 
           // Render path selection based on reduced motion preference
           if (this.reducedMotion) {
+            console.log('[MechanismCanvas] Calling renderDiscrete()');
             this.adapter.renderDiscrete();
           } else {
+            console.log('[MechanismCanvas] Calling renderFrame()');
             this.adapter.renderFrame();
           }
         }
       });
+    } else {
+      console.log('[MechanismCanvas] simulationState$ is NOT provided!');
     }
   }
 

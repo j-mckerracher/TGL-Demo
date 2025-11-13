@@ -56,23 +56,29 @@ export class EngineController {
    * from the ParamsStore. Safe to call multiple times (will reinitialize).
    */
   initialize(): void {
+    console.log('[EngineController] initialize() called');
     // Clean up existing engine if any
     if (this.engine) {
+      console.log('[EngineController] Cleaning up existing engine');
       this.stop();
       this.engine = undefined;
     }
 
     // Create new engine instance
     this.engine = createSimulationEngineV1();
+    console.log('[EngineController] Created new engine instance');
 
     // Get current parameters from store
     const params = this.paramsStore.parameters();
+    console.log('[EngineController] Current params:', params);
 
     // Initialize engine with parameters
     this.engine.initialize(params);
+    console.log('[EngineController] Engine initialized with parameters');
 
     this.isInitialized.set(true);
     this.isRunning.set(false);
+    console.log('[EngineController] isInitialized:', true, 'isRunning:', false);
   }
 
   /**
@@ -82,20 +88,27 @@ export class EngineController {
    * starting when not initialized or already running.
    */
   start(): void {
+    console.log('[EngineController] start() called');
+    console.log('[EngineController] Guard check - engine exists:', !!this.engine, 'isInitialized:', this.isInitialized());
     // Guard: must be initialized
     if (!this.engine || !this.isInitialized()) {
+      console.log('[EngineController] start() - BLOCKED: Engine not initialized');
       return;
     }
 
+    console.log('[EngineController] Guard check - isRunning:', this.isRunning());
     // Guard: already running
     if (this.isRunning()) {
+      console.log('[EngineController] start() - BLOCKED: Already running');
       return;
     }
 
+    console.log('[EngineController] Starting simulation loop');
     this.isRunning.set(true);
 
     // Start stepping loop
     this.scheduleNextStep();
+    console.log('[EngineController] scheduleNextStep() called, isRunning:', this.isRunning());
   }
 
   /**
@@ -144,14 +157,18 @@ export class EngineController {
   step(): void {
     // Guard: must be initialized and running
     if (!this.engine || !this.isInitialized() || !this.isRunning()) {
+      console.log('[EngineController] step() - BLOCKED: engine:', !!this.engine, 'isInitialized:', this.isInitialized(), 'isRunning:', this.isRunning());
       return;
     }
 
     // Execute one round
+    console.log('[EngineController] step() - calling stepRound()');
     this.engine.stepRound();
+    console.log('[EngineController] step() - stepRound() completed');
 
     // Check if we should continue
     if (this.engine.isConverged()) {
+      console.log('[EngineController] Simulation converged, stopping');
       // Simulation converged, stop automatically
       this.stop();
       return;

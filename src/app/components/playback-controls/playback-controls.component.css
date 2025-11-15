@@ -1,0 +1,75 @@
+.playback-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+}
+
+.playback-btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  border: 2px solid #333;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.playback-btn:hover:not(:disabled) {
+  background-color: #f0f0f0;
+  border-color: #000;
+  transform: translateY(-1px);
+}
+
+.playback-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.playback-btn:focus {
+  outline: 3px solid #4a90e2;
+  outline-offset: 2px;
+}
+
+.playback-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f5f5f5;
+  color: #999;
+  border-color: #ccc;
+}
+
+.play-btn:not(:disabled) {
+  background-color: #4caf50;
+  color: white;
+  border-color: #4caf50;
+}
+
+.play-btn:hover:not(:disabled) {
+  background-color: #45a049;
+  border-color: #45a049;
+}
+
+.pause-btn:not(:disabled) {
+  background-color: #ff9800;
+  color: white;
+  border-color: #ff9800;
+}
+
+.pause-btn:hover:not(:disabled) {
+  background-color: #e68900;
+  border-color: #e68900;
+}
+
+.reset-btn:not(:disabled) {
+  background-color: #f44336;
+  color: white;
+  border-color: #f44336;
+}
+
+.reset-btn:hover:not(:disabled) {
+  background-color: #da190b;
+  border-color: #da190b;
+}

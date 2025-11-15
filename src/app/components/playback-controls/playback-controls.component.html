@@ -1,0 +1,30 @@
+<div class="playback-controls">
+  <button
+    type="button"
+    class="playback-btn play-btn"
+    (click)="onPlay()"
+    [disabled]="isPlaying()"
+    aria-label="Play animation"
+  >
+    ▶ Play
+  </button>
+
+  <button
+    type="button"
+    class="playback-btn pause-btn"
+    (click)="onPause()"
+    [disabled]="!isPlaying()"
+    aria-label="Pause animation"
+  >
+    ⏸ Pause
+  </button>
+
+  <button
+    type="button"
+    class="playback-btn reset-btn"
+    (click)="onReset()"
+    aria-label="Reset simulation"
+  >
+    ⏹ Reset
+  </button>
+</div>

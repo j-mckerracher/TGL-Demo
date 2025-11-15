@@ -1,0 +1,33 @@
+<div class="metrics-panel" aria-live="polite" aria-label="Network simulation metrics">
+  <div class="metrics-grid">
+    <!-- P2P Metrics -->
+    <app-network-metric-card
+      [label]="'P2P Rounds'"
+      [value]="p2pRounds()"
+    />
+    <app-network-metric-card
+      [label]="'P2P Messages'"
+      [value]="p2pMessages()"
+    />
+    <app-network-metric-card
+      [label]="'P2P Time'"
+      [value]="p2pTime()"
+      [unit]="'ms'"
+    />
+
+    <!-- TGL Metrics -->
+    <app-network-metric-card
+      [label]="'TGL Rounds'"
+      [value]="tglRounds()"
+    />
+    <app-network-metric-card
+      [label]="'TGL Messages'"
+      [value]="tglMessages()"
+    />
+    <app-network-metric-card
+      [label]="'TGL Time'"
+      [value]="tglTime()"
+      [unit]="'ms'"
+    />
+  </div>
+</div>

@@ -1,82 +1,107 @@
 import { Injectable, inject, computed } from '@angular/core';
 import { SimulationService } from './simulation.service';
-import { ComparisonMetrics } from '../models/metrics.model';
+import { SettingsService } from './settings.service';
+import { ComparisonMetrics, NetworkMetrics } from '../models/metrics.model';
 
 /**
  * Service that computes comparison metrics between P2P and TGL simulations.
- * Provides reactive signals for displaying performance differences.
+ * Provides reactive signals for displaying performance differences and individual network metrics.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class MetricsService {
   private readonly simulationService = inject(SimulationService);
+  private readonly settingsService = inject(SettingsService);
+
+  /**
+   * Computed signal for P2P network metrics.
+   * Returns current metrics even if simulation is not complete.
+   */
+  readonly p2pMetrics = computed<NetworkMetrics>(() => {
+    const state = this.simulationService.p2pState();
+
+    // Calculate completion time
+    const completionTime = state.endTime && state.startTime
+      ? state.endTime - state.startTime
+      : 0;
+
+    return {
+      protocol: state.protocol,
+      totalRounds: state.round,
+      totalMessages: state.totalMessagesSent,
+      completionTime,
+      finalCoverage: state.coverage,
+      nodeCount: state.nodes.length,
+      averageDegree: this.settingsService.averageDegree(),
+      peakMessagesPerRound: 0, // Could be tracked if needed
+      startTimestamp: state.startTime ?? 0,
+      endTimestamp: state.endTime ?? 0,
+      successful: state.isComplete,
+    };
+  });
+
+  /**
+   * Computed signal for TGL network metrics.
+   * Returns current metrics even if simulation is not complete.
+   */
+  readonly tglMetrics = computed<NetworkMetrics>(() => {
+    const state = this.simulationService.tglState();
+
+    // Calculate completion time
+    const completionTime = state.endTime && state.startTime
+      ? state.endTime - state.startTime
+      : 0;
+
+    return {
+      protocol: state.protocol,
+      totalRounds: state.round,
+      totalMessages: state.totalMessagesSent,
+      completionTime,
+      finalCoverage: state.coverage,
+      nodeCount: state.nodes.length,
+      averageDegree: 0, // TGL has different topology structure
+      peakMessagesPerRound: 0, // Could be tracked if needed
+      startTimestamp: state.startTime ?? 0,
+      endTimestamp: state.endTime ?? 0,
+      successful: state.isComplete,
+    };
+  });
 
   /**
    * Computed signal that calculates comparison metrics between P2P and TGL.
    * Returns null if either simulation has not completed.
    */
   readonly comparison = computed<ComparisonMetrics | null>(() => {
-    const p2pState = this.simulationService.p2pState();
-    const tglState = this.simulationService.tglState();
+    const p2pMetrics = this.p2pMetrics();
+    const tglMetrics = this.tglMetrics();
 
     // Only compute comparison if both simulations are complete
-    if (!p2pState.isComplete || !tglState.isComplete) {
+    if (!p2pMetrics.successful || !tglMetrics.successful) {
       return null;
     }
 
     // Calculate time difference
-    const p2pTime = p2pState.endTime && p2pState.startTime
-      ? p2pState.endTime - p2pState.startTime
-      : 0;
-    const tglTime = tglState.endTime && tglState.startTime
-      ? tglState.endTime - tglState.startTime
-      : 0;
-
-    const timeDifference = p2pTime - tglTime;
+    const timeDifference = p2pMetrics.completionTime - tglMetrics.completionTime;
 
     // Calculate message reduction percentage: (P2P - TGL) / P2P * 100
-    const messageReduction = p2pState.totalMessagesSent > 0
-      ? ((p2pState.totalMessagesSent - tglState.totalMessagesSent) / p2pState.totalMessagesSent) * 100
+    const messageReduction = p2pMetrics.totalMessages > 0
+      ? ((p2pMetrics.totalMessages - tglMetrics.totalMessages) / p2pMetrics.totalMessages) * 100
       : 0;
 
     // Calculate round difference
-    const roundDifference = p2pState.round - tglState.round;
+    const roundDifference = p2pMetrics.totalRounds - tglMetrics.totalRounds;
 
     // Calculate efficiency improvement (messages * rounds)
-    const p2pEfficiency = p2pState.totalMessagesSent * p2pState.round;
-    const tglEfficiency = tglState.totalMessagesSent * tglState.round;
+    const p2pEfficiency = p2pMetrics.totalMessages * p2pMetrics.totalRounds;
+    const tglEfficiency = tglMetrics.totalMessages * tglMetrics.totalRounds;
     const efficiencyImprovement = p2pEfficiency > 0
       ? ((p2pEfficiency - tglEfficiency) / p2pEfficiency) * 100
       : 0;
 
     return {
-      flooding: {
-        protocol: p2pState.protocol,
-        totalRounds: p2pState.round,
-        totalMessages: p2pState.totalMessagesSent,
-        completionTime: p2pTime,
-        finalCoverage: p2pState.coverage,
-        nodeCount: p2pState.nodes.length,
-        averageDegree: 0, // Can be calculated if needed
-        peakMessagesPerRound: 0, // Can be tracked if needed
-        startTimestamp: p2pState.startTime ?? 0,
-        endTimestamp: p2pState.endTime ?? 0,
-        successful: p2pState.isComplete,
-      },
-      tgl: {
-        protocol: tglState.protocol,
-        totalRounds: tglState.round,
-        totalMessages: tglState.totalMessagesSent,
-        completionTime: tglTime,
-        finalCoverage: tglState.coverage,
-        nodeCount: tglState.nodes.length,
-        averageDegree: 0, // Can be calculated if needed
-        peakMessagesPerRound: 0, // Can be tracked if needed
-        startTimestamp: tglState.startTime ?? 0,
-        endTimestamp: tglState.endTime ?? 0,
-        successful: tglState.isComplete,
-      },
+      flooding: p2pMetrics,
+      tgl: tglMetrics,
       messageReduction,
       roundDifference,
       timeDifference,

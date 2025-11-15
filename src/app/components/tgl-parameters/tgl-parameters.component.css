@@ -1,0 +1,117 @@
+/* TGL Parameters Panel Styles */
+
+.tgl-parameters-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  max-width: 400px;
+}
+
+.panel-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.panel-description {
+  margin: 0 0 1rem 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #666;
+  padding: 0.5rem;
+  background-color: #f0f0f0;
+  border-left: 3px solid #007bff;
+  border-radius: 4px;
+}
+
+/* Individual Control Container */
+.config-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Label and Value Display */
+.control-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.control-value {
+  font-weight: 600;
+  color: #007bff;
+  min-width: 3rem;
+  text-align: right;
+}
+
+/* Dropdown Styling */
+.dropdown {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #333;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.dropdown:hover:not(:disabled) {
+  border-color: #007bff;
+  background-color: #f8f9fa;
+}
+
+.dropdown:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.dropdown:focus:not(:focus-visible) {
+  box-shadow: none;
+}
+
+.dropdown:focus-visible {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.dropdown:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #e9ecef;
+}
+
+/* Help Text */
+.help-text {
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+/* Status Indicator */
+.status-indicator {
+  padding: 0.75rem;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+.status-text {
+  font-size: 0.9rem;
+  color: #856404;
+  font-weight: 500;
+}

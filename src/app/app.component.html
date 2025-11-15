@@ -1,9 +1,77 @@
-<div class="container">
-  <header>
-    <h1>{{ title }}</h1>
-    <p>Angular-based P2P Three.js Graphics Library Demo</p>
+<div class="app-container">
+  <!-- Header Section with Playback Controls -->
+  <header class="app-header">
+    <div class="header-content">
+      <h1>{{ title }}</h1>
+      <div class="header-info">
+        <span>Nodes: {{ nodeCount() }}</span>
+        <span>Protocol: {{ protocol() }}</span>
+      </div>
+    </div>
+    <!-- TODO: Replace with <app-header> component when implemented -->
+    <div class="playback-controls">
+      <button type="button">Play</button>
+      <button type="button">Pause</button>
+      <button type="button">Reset</button>
+    </div>
   </header>
-  <main>
-    <p>Application initialized successfully.</p>
+
+  <!-- Main Grid: Configuration Panel | P2P Canvas | TGL Canvas -->
+  <main class="app-main">
+    <!-- Left Column: Configuration Panel -->
+    <div class="config-panel">
+      <h2>Network Configuration</h2>
+      <!-- TODO: Replace with <app-network-config> component when implemented -->
+      <div class="config-placeholder">
+        <p>Configuration controls will appear here</p>
+        <p>Nodes: {{ nodeCount() }}</p>
+      </div>
+    </div>
+
+    <!-- Center Column: P2P Canvas Container -->
+    <div class="canvas-container p2p-canvas">
+      <h3>P2P Gossip Protocol</h3>
+      <!-- TODO: Replace with <app-canvas-container [networkType]="'p2p'"> component when implemented -->
+      <div class="canvas-wrapper">
+        <canvas id="p2p-canvas"></canvas>
+      </div>
+      <div class="canvas-info">
+        <p>Coverage: {{ p2pState().coverage.toFixed(1) }}%</p>
+        <p>Round: {{ p2pState().round }}</p>
+        <p>Messages: {{ p2pState().totalMessagesSent }}</p>
+      </div>
+    </div>
+
+    <!-- Right Column: TGL Canvas Container -->
+    <div class="canvas-container tgl-canvas">
+      <h3>TGL Protocol</h3>
+      <!-- TODO: Replace with <app-canvas-container [networkType]="'tgl'"> component when implemented -->
+      <div class="canvas-wrapper">
+        <canvas id="tgl-canvas"></canvas>
+      </div>
+      <div class="canvas-info">
+        <p>Coverage: {{ tglState().coverage.toFixed(1) }}%</p>
+        <p>Round: {{ tglState().round }}</p>
+        <p>Messages: {{ tglState().totalMessagesSent }}</p>
+      </div>
+    </div>
   </main>
+
+  <!-- Metrics Panel Section -->
+  <section class="metrics-panel">
+    <h2>Performance Metrics</h2>
+    <!-- TODO: Replace with <app-metrics-panel> component when implemented -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <h4>P2P Protocol</h4>
+        <p>Coverage: {{ p2pState().coverage.toFixed(1) }}%</p>
+        <p>Messages Sent: {{ p2pState().totalMessagesSent }}</p>
+      </div>
+      <div class="metric-card">
+        <h4>TGL Protocol</h4>
+        <p>Coverage: {{ tglState().coverage.toFixed(1) }}%</p>
+        <p>Messages Sent: {{ tglState().totalMessagesSent }}</p>
+      </div>
+    </div>
+  </section>
 </div>

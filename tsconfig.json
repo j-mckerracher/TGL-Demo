@@ -3,88 +3,31 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist/out-tsc",
+    "sourceMap": true,
+    "declaration": false,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "lib": ["ES2022", "dom"],
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
-    "isolatedModules": true,
-    "experimentalDecorators": true,
-    "paths": {
-      "a11y": [
-        "./dist/a11y"
-      ],
-      "config": [
-        "./dist/config"
-      ],
-      "fallback": [
-        "./dist/fallback"
-      ],
-      "rendering": [
-        "./dist/rendering"
-      ],
-      "simulation": [
-        "./dist/simulation"
-      ],
-      "ui": [
-        "./dist/ui"
-      ]
-    },
-    "importHelpers": true,
-    "target": "ES2022",
-    "module": "preserve"
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
-    "typeCheckHostBindings": true,
     "strictTemplates": true
-  },
-  "files": [],
-  "references": [
-    {
-      "path": "./projects/tgl-results-explorer-web/tsconfig.app.json"
-    },
-    {
-      "path": "./projects/tgl-results-explorer-web/tsconfig.spec.json"
-    },
-    {
-      "path": "./projects/simulation/tsconfig.lib.json"
-    },
-    {
-      "path": "./projects/simulation/tsconfig.spec.json"
-    },
-    {
-      "path": "./projects/rendering/tsconfig.lib.json"
-    },
-    {
-      "path": "./projects/rendering/tsconfig.spec.json"
-    },
-    {
-      "path": "./projects/ui/tsconfig.lib.json"
-    },
-    {
-      "path": "./projects/ui/tsconfig.spec.json"
-    },
-    {
-      "path": "./projects/a11y/tsconfig.lib.json"
-    },
-    {
-      "path": "./projects/a11y/tsconfig.spec.json"
-    },
-    {
-      "path": "./projects/fallback/tsconfig.lib.json"
-    },
-    {
-      "path": "./projects/fallback/tsconfig.spec.json"
-    },
-    {
-      "path": "./projects/config/tsconfig.lib.json"
-    },
-    {
-      "path": "./projects/config/tsconfig.spec.json"
-    }
-  ]
+  }
 }

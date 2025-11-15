@@ -1,0 +1,37 @@
+<div class="comparison-card">
+  @if (bothComplete()) {
+    <div class="card-header">
+      <h3 class="card-title">TGL vs P2P Comparison</h3>
+    </div>
+
+    <div class="metrics-container">
+      <!-- Message Reduction Metric -->
+      <div class="metric-row">
+        <div class="metric-label">Message Reduction</div>
+        <div class="metric-value" [ngClass]="getMetricClass(messageReduction())">
+          {{ formatPercentage(messageReduction()) }}
+        </div>
+      </div>
+
+      <!-- Speed Gain Metric -->
+      <div class="metric-row">
+        <div class="metric-label">Speed Gain</div>
+        <div class="metric-value" [ngClass]="getMetricClass(speedGain())">
+          {{ formatPercentage(speedGain()) }}
+        </div>
+      </div>
+
+      <!-- Efficiency Gain Metric -->
+      <div class="metric-row">
+        <div class="metric-label">Efficiency Gain</div>
+        <div class="metric-value" [ngClass]="getMetricClass(efficiencyGain())">
+          {{ formatPercentage(efficiencyGain()) }}
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="waiting-state">
+      <div class="waiting-message">Waiting for simulations to complete...</div>
+    </div>
+  }
+</div>

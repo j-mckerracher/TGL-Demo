@@ -8,7 +8,16 @@ import { sampleWithoutReplacement } from '../utils/array.utils';
 import { clamp } from '../utils/math.utils';
 
 /**
- * Service that manages the P2P gossip simulation logic.
+ * TGL stage enumeration for three-stage rounds
+ */
+export enum TglStage {
+  PUSH = 'push',
+  GOSSIP = 'gossip',
+  PULL = 'pull',
+}
+
+/**
+ * Service that manages the P2P and TGL simulation logic.
  * Provides headless simulation state management with round-by-round propagation,
  * transfer tracking, and coverage metrics.
  */
@@ -27,6 +36,26 @@ export class SimulationService {
    * Public readonly accessor for the P2P network state.
    */
   public readonly p2pState = this._p2pState.asReadonly();
+
+  /**
+   * Internal writable signal for the TGL network state.
+   */
+  private readonly _tglState = signal<NetworkState>(this.createInitialState());
+
+  /**
+   * Public readonly accessor for the TGL network state.
+   */
+  public readonly tglState = this._tglState.asReadonly();
+
+  /**
+   * Internal writable signal for the current TGL stage.
+   */
+  private readonly _tglCurrentStage = signal<TglStage>(TglStage.PUSH);
+
+  /**
+   * Public readonly accessor for the current TGL stage.
+   */
+  public readonly tglCurrentStage = this._tglCurrentStage.asReadonly();
 
   /**
    * Transfer ID counter for generating unique transfer IDs.
@@ -330,5 +359,373 @@ export class SimulationService {
       y: radius * Math.sin(angle),
       z: 0,
     };
+  }
+
+  /**
+   * Gets a spherical position for a node at the given index.
+   * Helper method for distributing nodes evenly on a sphere.
+   *
+   * @param index - The node index
+   * @param total - Total number of nodes to distribute
+   * @param radius - Radius of the sphere
+   * @returns Position3D coordinates on the sphere surface
+   */
+  private getSphericalPosition(index: number, total: number, radius: number): Position3D {
+    // Use golden spiral method for even distribution on sphere
+    const phi = Math.acos(1 - 2 * (index + 0.5) / total);
+    const theta = Math.PI * (1 + Math.sqrt(5)) * index;
+
+    return {
+      x: radius * Math.sin(phi) * Math.cos(theta),
+      y: radius * Math.sin(phi) * Math.sin(theta),
+      z: radius * Math.cos(phi),
+    };
+  }
+
+  /**
+   * Initializes a TGL network with a two-tier topology.
+   * Relays are placed near the center, leaves are distributed on a sphere.
+   * Relays connect to each other and to their assigned leaves.
+   * One relay starts with data (ACTIVE state), all others start IDLE.
+   *
+   * @returns A new NetworkState with the initialized TGL network
+   */
+  public initializeTglNetwork(): NetworkState {
+    const relayCount = this.settingsService.relayCount();
+    const leafCount = this.settingsService.leafCount();
+    const relayBudget = this.settingsService.relayBudget();
+    const leafBudget = this.settingsService.leafBudget();
+    const totalNodes = relayCount + leafCount;
+
+    const nodes: Node[] = [];
+    const edges: Edge[] = [];
+
+    const relayRadius = 20; // Small radius for relay cluster
+    const leafRadius = 100; // Larger radius for leaf sphere
+
+    // Create relay nodes near the center
+    for (let i = 0; i < relayCount; i++) {
+      const position: Position3D = this.getCircularPosition(i, relayCount, relayRadius);
+
+      const node: Node = {
+        id: `relay-${i}`,
+        position,
+        state: i === 0 ? NodeState.ACTIVE : NodeState.IDLE,
+        neighbors: [],
+        isRelay: true,
+        budget: relayBudget,
+        receivedAtRound: i === 0 ? 0 : undefined,
+      };
+
+      nodes.push(node);
+    }
+
+    // Create leaf nodes on a sphere
+    for (let i = 0; i < leafCount; i++) {
+      const position: Position3D = this.getSphericalPosition(i, leafCount, leafRadius);
+
+      const node: Node = {
+        id: `leaf-${i}`,
+        position,
+        state: NodeState.IDLE,
+        neighbors: [],
+        isRelay: false,
+        budget: leafBudget,
+        receivedAtRound: undefined,
+      };
+
+      nodes.push(node);
+    }
+
+    // Connect relays to each other (fully connected relay mesh)
+    for (let i = 0; i < relayCount; i++) {
+      for (let j = i + 1; j < relayCount; j++) {
+        const relay1 = nodes[i];
+        const relay2 = nodes[j];
+
+        relay1.neighbors.push(relay2.id);
+        relay2.neighbors.push(relay1.id);
+
+        edges.push({
+          sourceId: relay1.id,
+          targetId: relay2.id,
+          active: false,
+        });
+      }
+    }
+
+    // Assign each leaf to relays (round-robin distribution)
+    for (let i = 0; i < leafCount; i++) {
+      const leaf = nodes[relayCount + i];
+      // Assign to primary relay (round-robin)
+      const relayIndex = i % relayCount;
+      const relay = nodes[relayIndex];
+
+      leaf.neighbors.push(relay.id);
+      relay.neighbors.push(leaf.id);
+
+      edges.push({
+        sourceId: leaf.id,
+        targetId: relay.id,
+        active: false,
+      });
+    }
+
+    // Calculate initial coverage (only relay-0 has data)
+    const coverage = (1 / totalNodes) * 100;
+
+    const networkState: NetworkState = {
+      nodes,
+      edges,
+      transfers: [],
+      round: 0,
+      coverage,
+      protocol: ProtocolType.TGL,
+      stage: SimulationStage.INITIALIZING,
+      sourceNodeId: 'relay-0',
+      totalMessagesSent: 0,
+      startTime: Date.now(),
+      endTime: undefined,
+      isComplete: false,
+    };
+
+    this._tglState.set(networkState);
+    this._tglCurrentStage.set(TglStage.PUSH);
+    this.transferIdCounter = 0;
+    return networkState;
+  }
+
+  /**
+   * Executes one stage of the TGL round (Push, Gossip, or Pull).
+   * Push: leaves send to relays
+   * Gossip: relays exchange with other relays
+   * Pull: relays send to leaves
+   * Automatically advances to the next stage or next round.
+   *
+   * @returns A new NetworkState after executing one stage
+   */
+  public stepTglRound(): NetworkState {
+    const currentState = this._tglState();
+
+    // If simulation is already complete, return current state
+    if (currentState.isComplete) {
+      return currentState;
+    }
+
+    const currentStage = this._tglCurrentStage();
+    let newNodes = currentState.nodes.map((node) => ({ ...node }));
+    const newTransfers: Transfer[] = [];
+    let messagesSent = 0;
+    let newRound = currentState.round;
+    let newStage = currentStage;
+
+    // Execute stage-specific logic
+    switch (currentStage) {
+      case TglStage.PUSH:
+        // Leaves with data send to their relay
+        const activeLeaves = newNodes.filter(
+          (node) => !node.isRelay && node.state === NodeState.ACTIVE
+        );
+
+        for (const leaf of activeLeaves) {
+          // Send to all connected relays (typically one)
+          const relayNeighbors = leaf.neighbors.filter((neighborId) => {
+            const neighbor = newNodes.find((n) => n.id === neighborId);
+            return neighbor && neighbor.isRelay;
+          });
+
+          for (const relayId of relayNeighbors) {
+            const relay = newNodes.find((n) => n.id === relayId);
+            if (relay && relay.state === NodeState.IDLE) {
+              // Update relay state
+              relay.state = NodeState.ACTIVE;
+              relay.receivedAtRound = newRound;
+
+              // Create transfer
+              const transfer: Transfer = {
+                id: `transfer-${this.transferIdCounter++}`,
+                sourceId: leaf.id,
+                targetId: relay.id,
+                edgeId: `${leaf.id}-${relay.id}`,
+                progress: 0,
+                state: TransferState.IN_PROGRESS,
+                startTime: Date.now(),
+                round: newRound,
+              };
+
+              newTransfers.push(transfer);
+              messagesSent++;
+            }
+          }
+        }
+
+        // Advance to Gossip stage
+        newStage = TglStage.GOSSIP;
+        break;
+
+      case TglStage.GOSSIP:
+        // Relays with data exchange with other relays
+        const activeRelays = newNodes.filter(
+          (node) => node.isRelay && node.state === NodeState.ACTIVE
+        );
+
+        const relayBudget = this.settingsService.relayBudget();
+
+        for (const relay of activeRelays) {
+          // Get other relays that are neighbors and don't have data yet
+          const eligibleRelayNeighbors = relay.neighbors.filter((neighborId) => {
+            const neighbor = newNodes.find((n) => n.id === neighborId);
+            return neighbor && neighbor.isRelay && neighbor.state === NodeState.IDLE;
+          });
+
+          // Sample up to relayBudget neighbors
+          const targetCount = Math.min(relayBudget, eligibleRelayNeighbors.length);
+          const selectedRelays = sampleWithoutReplacement(eligibleRelayNeighbors, targetCount);
+
+          for (const relayId of selectedRelays) {
+            const targetRelay = newNodes.find((n) => n.id === relayId);
+            if (targetRelay) {
+              // Update target relay state
+              targetRelay.state = NodeState.ACTIVE;
+              targetRelay.receivedAtRound = newRound;
+
+              // Create transfer
+              const transfer: Transfer = {
+                id: `transfer-${this.transferIdCounter++}`,
+                sourceId: relay.id,
+                targetId: targetRelay.id,
+                edgeId: `${relay.id}-${targetRelay.id}`,
+                progress: 0,
+                state: TransferState.IN_PROGRESS,
+                startTime: Date.now(),
+                round: newRound,
+              };
+
+              newTransfers.push(transfer);
+              messagesSent++;
+            }
+          }
+        }
+
+        // Advance to Pull stage
+        newStage = TglStage.PULL;
+        break;
+
+      case TglStage.PULL:
+        // Relays with data send to their connected leaves
+        const activeRelaysForPull = newNodes.filter(
+          (node) => node.isRelay && node.state === NodeState.ACTIVE
+        );
+
+        for (const relay of activeRelaysForPull) {
+          // Get leaf neighbors that don't have data yet
+          const eligibleLeafNeighbors = relay.neighbors.filter((neighborId) => {
+            const neighbor = newNodes.find((n) => n.id === neighborId);
+            return neighbor && !neighbor.isRelay && neighbor.state === NodeState.IDLE;
+          });
+
+          for (const leafId of eligibleLeafNeighbors) {
+            const leaf = newNodes.find((n) => n.id === leafId);
+            if (leaf) {
+              // Update leaf state
+              leaf.state = NodeState.ACTIVE;
+              leaf.receivedAtRound = newRound + 1; // Next round
+
+              // Create transfer
+              const transfer: Transfer = {
+                id: `transfer-${this.transferIdCounter++}`,
+                sourceId: relay.id,
+                targetId: leaf.id,
+                edgeId: `${relay.id}-${leaf.id}`,
+                progress: 0,
+                state: TransferState.IN_PROGRESS,
+                startTime: Date.now(),
+                round: newRound + 1,
+              };
+
+              newTransfers.push(transfer);
+              messagesSent++;
+            }
+          }
+        }
+
+        // Advance to next round, reset to Push stage
+        newRound = currentState.round + 1;
+        newStage = TglStage.PUSH;
+        break;
+    }
+
+    // Calculate new coverage
+    const nodesWithData = newNodes.filter((n) => n.state === NodeState.ACTIVE).length;
+    const coverage = (nodesWithData / newNodes.length) * 100;
+
+    // Check if simulation is complete
+    const isComplete = coverage >= 100;
+
+    // Create new network state
+    const newState: NetworkState = {
+      ...currentState,
+      nodes: newNodes,
+      transfers: [...currentState.transfers, ...newTransfers],
+      round: newRound,
+      coverage,
+      totalMessagesSent: currentState.totalMessagesSent + messagesSent,
+      stage: isComplete ? SimulationStage.COMPLETED : SimulationStage.RUNNING,
+      endTime: isComplete ? Date.now() : undefined,
+      isComplete,
+    };
+
+    this._tglState.set(newState);
+    this._tglCurrentStage.set(newStage);
+    return newState;
+  }
+
+  /**
+   * Updates the progress of all active TGL transfers based on elapsed time.
+   * Advances transfer progress from 0 to 1 and removes completed transfers.
+   * This method should be called each animation frame with the time delta.
+   *
+   * @param deltaTime - Time elapsed since last update (in milliseconds)
+   * @returns A new NetworkState with updated transfer states
+   */
+  public updateTglTransfers(deltaTime: number): NetworkState {
+    const currentState = this._tglState();
+
+    // Calculate progress increment based on deltaTime and transfer duration
+    const progressIncrement = deltaTime / this.transferDuration;
+
+    // Update all transfers
+    const updatedTransfers: Transfer[] = [];
+
+    for (const transfer of currentState.transfers) {
+      if (transfer.state === TransferState.IN_PROGRESS) {
+        // Advance progress
+        const newProgress = clamp(transfer.progress + progressIncrement, 0, 1);
+
+        // Check if transfer is complete
+        if (newProgress >= 1) {
+          // Transfer is complete, remove it (or mark as completed if you want to keep them)
+          // For now, we'll remove completed transfers
+        } else {
+          // Transfer still in progress
+          updatedTransfers.push({
+            ...transfer,
+            progress: newProgress,
+          });
+        }
+      } else {
+        // Keep transfers in other states
+        updatedTransfers.push(transfer);
+      }
+    }
+
+    // Create new network state with updated transfers
+    const newState: NetworkState = {
+      ...currentState,
+      transfers: updatedTransfers,
+    };
+
+    this._tglState.set(newState);
+    return newState;
   }
 }

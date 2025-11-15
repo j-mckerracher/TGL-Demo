@@ -1,0 +1,62 @@
+<div class="tgl-parameters-panel">
+  <h3 class="panel-title">TGL Parameters</h3>
+
+  <p class="panel-description" id="tgl-description">
+    Configure the distribution of relay and leaf nodes in the TGL network.
+    Relay nodes forward messages and maintain network connectivity, while
+    leaf nodes are lightweight participants that rely on relays.
+  </p>
+
+  <!-- Relay Percentage Dropdown -->
+  <div class="config-control">
+    <label for="relay-percentage-select" class="control-label">
+      Relay Nodes (%)
+      <span id="relay-percentage-value" class="control-value">{{ relayPercentage() }}%</span>
+    </label>
+    <select
+      id="relay-percentage-select"
+      [value]="relayPercentage()"
+      (change)="onRelayPercentageChange($event)"
+      [disabled]="isPlaying()"
+      aria-label="Relay node percentage"
+      aria-describedby="relay-percentage-help"
+      class="dropdown"
+    >
+      <option *ngFor="let option of relayOptions" [value]="option">
+        {{ option }}%
+      </option>
+    </select>
+    <small id="relay-percentage-help" class="help-text">
+      Percentage of nodes that act as message forwarders
+    </small>
+  </div>
+
+  <!-- Leaf Percentage Dropdown -->
+  <div class="config-control">
+    <label for="leaf-percentage-select" class="control-label">
+      Leaf Nodes (%)
+      <span id="leaf-percentage-value" class="control-value">{{ leafPercentage() }}%</span>
+    </label>
+    <select
+      id="leaf-percentage-select"
+      [value]="leafPercentage()"
+      (change)="onLeafPercentageChange($event)"
+      [disabled]="isPlaying()"
+      aria-label="Leaf node percentage"
+      aria-describedby="leaf-percentage-help"
+      class="dropdown"
+    >
+      <option *ngFor="let option of leafOptions" [value]="option">
+        {{ option }}%
+      </option>
+    </select>
+    <small id="leaf-percentage-help" class="help-text">
+      Percentage of lightweight nodes that rely on relays
+    </small>
+  </div>
+
+  <!-- Status Indicator -->
+  <div class="status-indicator" *ngIf="isPlaying()" role="status" aria-live="polite">
+    <span class="status-text">⚠️ Controls disabled during playback</span>
+  </div>
+</div>

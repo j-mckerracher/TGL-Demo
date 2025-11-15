@@ -1,0 +1,15 @@
+<div class="legend">
+  <h4 class="legend__title">Node States</h4>
+  <div class="legend__items">
+    @for (item of legendItems; track item.label) {
+      <div class="legend__item">
+        <span
+          class="legend__swatch"
+          [style.background-color]="item.color"
+          [attr.aria-label]="item.label + ' state color'"
+        ></span>
+        <span class="legend__label">{{ item.label }}</span>
+      </div>
+    }
+  </div>
+</div>

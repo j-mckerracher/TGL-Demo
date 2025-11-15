@@ -1,0 +1,103 @@
+<div class="network-config-panel">
+  <h3 class="panel-title">Network Configuration</h3>
+
+  <!-- Node Count Slider -->
+  <div class="config-control">
+    <label for="node-count-slider" class="control-label">
+      Node Count
+      <span id="node-count-value" class="control-value">{{ nodeCount() }}</span>
+    </label>
+    <input
+      id="node-count-slider"
+      type="range"
+      min="10"
+      max="100"
+      step="1"
+      [value]="nodeCount()"
+      (input)="onNodeCountChange($event)"
+      [disabled]="isPlaying()"
+      aria-label="Node count slider"
+      aria-describedby="node-count-value"
+      class="slider"
+    />
+  </div>
+
+  <!-- Average Degree (k) Slider -->
+  <div class="config-control">
+    <label for="degree-k-slider" class="control-label">
+      Degree (k)
+      <span id="degree-k-value" class="control-value">{{ averageDegree() }}</span>
+    </label>
+    <input
+      id="degree-k-slider"
+      type="range"
+      min="2"
+      max="20"
+      step="1"
+      [value]="averageDegree()"
+      (input)="onAverageDegreeChange($event)"
+      [disabled]="isPlaying()"
+      aria-label="Average degree slider"
+      aria-describedby="degree-k-value"
+      class="slider"
+    />
+  </div>
+
+  <!-- Relay Percentage Slider -->
+  <div class="config-control">
+    <label for="relay-percentage-slider" class="control-label">
+      Relay Nodes (%)
+      <span id="relay-percentage-value" class="control-value">{{ relayPercentage() }}%</span>
+    </label>
+    <input
+      id="relay-percentage-slider"
+      type="range"
+      min="0"
+      max="100"
+      step="1"
+      [value]="relayPercentage()"
+      (input)="onRelayPercentageChange($event)"
+      [disabled]="isPlaying()"
+      aria-label="Relay percentage slider"
+      aria-describedby="relay-percentage-value"
+      class="slider"
+    />
+  </div>
+
+  <!-- Leaf Percentage Display (Read-only) -->
+  <div class="config-control">
+    <label class="control-label">
+      Leaf Nodes (%)
+      <span id="leaf-percentage-value" class="control-value">{{ leafPercentage() }}%</span>
+    </label>
+    <div class="readonly-display" aria-live="polite" aria-atomic="true">
+      Derived: {{ leafPercentage() }}% ({{ 100 - relayPercentage() }}%)
+    </div>
+  </div>
+
+  <!-- Animation Speed Slider -->
+  <div class="config-control">
+    <label for="animation-speed-slider" class="control-label">
+      Animation Speed
+      <span id="animation-speed-value" class="control-value">{{ animationSpeed() | number:'1.1-1' }}x</span>
+    </label>
+    <input
+      id="animation-speed-slider"
+      type="range"
+      min="0.1"
+      max="3.0"
+      step="0.1"
+      [value]="animationSpeed()"
+      (input)="onAnimationSpeedChange($event)"
+      [disabled]="isPlaying()"
+      aria-label="Animation speed slider"
+      aria-describedby="animation-speed-value"
+      class="slider"
+    />
+  </div>
+
+  <!-- Status Indicator -->
+  <div class="status-indicator" *ngIf="isPlaying()" role="status" aria-live="polite">
+    <span class="status-text">⚠️ Controls disabled during playback</span>
+  </div>
+</div>

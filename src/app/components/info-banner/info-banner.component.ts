@@ -18,7 +18,7 @@ export class InfoBannerComponent {
    * Visual indicators for node types with their colors
    */
   public readonly nodeTypes = [
-    { label: 'Relay Nodes', color: '#8b5cf6', description: 'Forward messages between network tiers' },
+    { label: 'Relay Nodes', color: '#ff8c00', description: 'Forward messages between network tiers' },
     { label: 'Leaf Nodes', color: '#22c55e', description: 'Connect through relay nodes for efficiency' },
   ];
 

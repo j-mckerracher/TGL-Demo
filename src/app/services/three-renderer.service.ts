@@ -11,6 +11,8 @@ import {
   Line,
   Vector3,
   Color,
+  RingGeometry,
+  DoubleSide,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { NetworkState } from '../models/network-state.model';
@@ -45,6 +47,7 @@ interface SceneContext {
   nodeStates: Map<string, NodeState>;
   nodeMap: Map<string, Node>;
   sourceNodeId?: string;
+  pulseRings: Map<string, Mesh>;
 }
 
 /**
@@ -123,6 +126,7 @@ export class ThreeRendererService {
       nodeStates: new Map(),
       nodeMap: new Map(),
       sourceNodeId: undefined,
+      pulseRings: new Map(),
     };
 
     this.scenes.set(sceneId, context);
@@ -183,6 +187,9 @@ export class ThreeRendererService {
 
       // Update node animations
       this.updateNodeAnimations(context);
+
+      // Update continuous pulse for active nodes
+      this.updateActivePulse(context);
 
       // Render the scene
       context.renderer.render(context.scene, context.camera);
@@ -257,6 +264,16 @@ export class ThreeRendererService {
       context.scene.remove(mesh);
     });
     context.particleMeshes.clear();
+
+    // Dispose all pulse rings
+    context.pulseRings.forEach((ring) => {
+      ring.geometry.dispose();
+      if (ring.material instanceof MeshBasicMaterial) {
+        ring.material.dispose();
+      }
+      context.scene.remove(ring);
+    });
+    context.pulseRings.clear();
 
     // Dispose controls
     context.controls.dispose();
@@ -535,6 +552,106 @@ export class ThreeRendererService {
   }
 
   /**
+   * Updates continuous pulse animation for nodes in ACTIVE state or RELAY nodes
+   */
+  private updateActivePulse(context: SceneContext): void {
+    const currentTime = performance.now();
+    
+    context.nodeMap.forEach((node, nodeId) => {
+      const mesh = context.nodeMeshes.get(nodeId);
+      if (!mesh) return;
+
+      // Skip if node is currently animating from state change
+      if (context.nodeAnimations.has(nodeId)) return;
+
+      const isSourceNode = context.sourceNodeId === nodeId;
+      
+      // Apply continuous pulse to ACTIVE nodes (not source node) OR relay nodes when idle
+      const shouldPulse = (node.state === NodeState.ACTIVE && !isSourceNode) || 
+                         (node.isRelay === true && node.state === NodeState.IDLE);
+      
+      if (shouldPulse) {
+        // Pulse cycle: 2 seconds per full cycle
+        const cycle = (currentTime % 2000) / 2000; // 0 to 1
+        const pulseAmount = Math.sin(cycle * Math.PI * 2) * 0.5 + 0.5; // 0 to 1 smooth
+        
+        // Scale between 1.0 and 1.25 (increased from 1.15 for more visibility)
+        const scale = 1.0 + (pulseAmount * 0.25);
+        mesh.scale.set(scale, scale, scale);
+
+        // Create or update pulse ring (green for active, orange for relay)
+        const ringColor = node.isRelay ? 0xff8c00 : 0x22c55e;
+        this.updatePulseRing(context, nodeId, node.position, pulseAmount, ringColor);
+      } else {
+        // Reset scale for non-active nodes (unless animating)
+        if (mesh.scale.x !== 1 || mesh.scale.y !== 1 || mesh.scale.z !== 1) {
+          mesh.scale.set(1, 1, 1);
+        }
+        // Remove pulse ring if it exists
+        this.removePulseRing(context, nodeId);
+      }
+    });
+  }
+
+  /**
+   * Creates or updates an expanding pulse ring for an active node or relay node
+   */
+  private updatePulseRing(context: SceneContext, nodeId: string, position: { x: number; y: number; z: number }, pulseAmount: number, ringColor: number = 0x22c55e): void {
+    let ring = context.pulseRings.get(nodeId);
+
+    if (!ring) {
+      // Create new ring
+      const geometry = new RingGeometry(0.4, 0.5, 32);
+      const material = new MeshBasicMaterial({
+        color: ringColor,
+        side: DoubleSide,
+        transparent: true,
+        opacity: 0,
+      });
+      ring = new Mesh(geometry, material);
+      ring.position.set(position.x, position.y, position.z);
+      context.pulseRings.set(nodeId, ring);
+      context.scene.add(ring);
+    }
+
+    // Update ring position to match node
+    ring.position.set(position.x, position.y, position.z);
+
+    // Update ring color if it changed
+    if (ring.material instanceof MeshBasicMaterial && ring.material.color.getHex() !== ringColor) {
+      ring.material.color.setHex(ringColor);
+    }
+
+    // Make ring always face the camera
+    ring.lookAt(context.camera.position);
+
+    // Animate ring expansion and fade
+    // Scale from 1.0 to 2.0 as pulse goes 0 to 1
+    const ringScale = 1.0 + (pulseAmount * 1.0);
+    ring.scale.set(ringScale, ringScale, ringScale);
+
+    // Opacity fades from 0.7 to 0 as it expands
+    if (ring.material instanceof MeshBasicMaterial) {
+      ring.material.opacity = 0.7 * (1 - pulseAmount);
+    }
+  }
+
+  /**
+   * Removes a pulse ring from a node
+   */
+  private removePulseRing(context: SceneContext, nodeId: string): void {
+    const ring = context.pulseRings.get(nodeId);
+    if (ring) {
+      ring.geometry.dispose();
+      if (ring.material instanceof MeshBasicMaterial) {
+        ring.material.dispose();
+      }
+      context.scene.remove(ring);
+      context.pulseRings.delete(nodeId);
+    }
+  }
+
+  /**
    * Maps node state to color, with special handling for source and relay nodes
    */
   private getNodeColor(state: NodeState, isRelay?: boolean, isSourceNode?: boolean): Color {
@@ -543,9 +660,9 @@ export class ThreeRendererService {
       return new Color(0xef4444); // Red - Source Node
     }
 
-    // Relay nodes get purple color when idle (TGL visualization)
+    // Relay nodes get orange color when idle (TGL visualization) - high contrast
     if (isRelay && state === NodeState.IDLE) {
-      return new Color(0xa78bfa); // Purple - Relay Node
+      return new Color(0xff8c00); // Dark Orange - Relay Node
     }
 
     // State-based colors

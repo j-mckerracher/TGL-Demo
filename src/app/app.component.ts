@@ -57,7 +57,7 @@ export class AppComponent implements OnInit {
     { label: 'Inactive Node', color: '#3b82f6' },
     { label: 'Has Update', color: '#22c55e' },
     { label: 'Source Node', color: '#ef4444' },
-    { label: 'Relay Node', color: '#a78bfa' },
+    { label: 'Relay Node', color: '#ff8c00' },
   ];
 
   /**

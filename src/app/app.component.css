@@ -171,9 +171,36 @@ input[type='range']::-moz-range-thumb {
   background: #0f1423;
   border-bottom: 1px solid #1e293b;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.interaction-tips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #94a3b8;
+  padding: 6px 12px;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.tip-icon {
+  font-size: 16px;
+}
+
+.tip-text {
+  white-space: nowrap;
+}
+
+.controls-center {
+  display: flex;
   align-items: center;
   gap: 40px;
+  flex: 1;
+  justify-content: center;
 }
 
 .round-display {
@@ -441,6 +468,15 @@ app-network-canvas {
     flex-direction: column;
     gap: 12px;
     align-items: stretch;
+  }
+
+  .interaction-tips {
+    justify-content: center;
+  }
+
+  .controls-center {
+    flex-direction: column;
+    gap: 12px;
   }
 
   .round-display {

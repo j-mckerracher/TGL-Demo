@@ -136,16 +136,22 @@
   <main class="main-content">
     <!-- Top Controls Bar -->
     <div class="controls-bar">
-      <div class="round-display">
-        Round: <strong>{{ currentRound() }}</strong> / {{ maxRounds() }}
+      <div class="interaction-tips">
+        <span class="tip-icon">💡</span>
+        <span class="tip-text">Scroll to zoom • Drag to rotate • Right-click to pan</span>
       </div>
-      <div class="playback-controls">
-        <button class="control-btn" type="button" disabled title="Previous Round">⏮</button>
-        <button class="control-btn primary" type="button" (click)="togglePlayback()" title="Play/Pause">
-          {{ isPlaying() ? '⏸' : '▶' }}
-        </button>
-        <button class="control-btn" type="button" disabled title="Next Round">⏭</button>
-        <button class="control-btn" type="button" (click)="onReset()" title="Reset">🔄</button>
+      <div class="controls-center">
+        <div class="round-display">
+          Round: <strong>{{ currentRound() }}</strong> / {{ maxRounds() }}
+        </div>
+        <div class="playback-controls">
+          <button class="control-btn" type="button" disabled title="Previous Round">⏮</button>
+          <button class="control-btn primary" type="button" (click)="togglePlayback()" title="Play/Pause">
+            {{ isPlaying() ? '⏸' : '▶' }}
+          </button>
+          <button class="control-btn" type="button" disabled title="Next Round">⏭</button>
+          <button class="control-btn" type="button" (click)="onReset()" title="Reset">🔄</button>
+        </div>
       </div>
     </div>
 

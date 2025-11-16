@@ -1,76 +1,237 @@
 <div class="app-container">
-  <!-- Header Section with Playback Controls -->
-  <header class="app-header">
-    <div class="header-content">
-      <h1>{{ title }}</h1>
-      <div class="header-info">
-        <span>Nodes: {{ nodeCount() }}</span>
-        <span>Protocol: {{ protocol() }}</span>
-      </div>
+  <header class="header">
+    <div class="header-title">
+      <h1>Tiered Gossip Learning (TGL) vs Peer-to-Peer</h1>
+      <div class="header-subtitle">Interactive Network Propagation Demo</div>
     </div>
-    <!-- TODO: Replace with <app-header> component when implemented -->
+
     <div class="playback-controls">
-      <button type="button">Play</button>
-      <button type="button">Pause</button>
-      <button type="button">Reset</button>
+      <span class="frame-info">
+        Round: <strong>{{ currentRound() }}</strong> / {{ maxRounds() }}
+      </span>
+      <button class="control-btn" type="button" disabled title="Previous Round">⏮</button>
+      <button class="control-btn primary" type="button" (click)="togglePlayback()" title="Play/Pause">
+        {{ isPlaying() ? '⏸' : '▶' }}
+      </button>
+      <button class="control-btn" type="button" disabled title="Next Round">⏭</button>
+      <button class="control-btn" type="button" (click)="onReset()" title="Reset">↻</button>
     </div>
   </header>
 
-  <!-- Main Grid: Configuration Panel | P2P Canvas | TGL Canvas -->
-  <main class="app-main">
-    <!-- Left Column: Configuration Panel -->
-    <div class="config-panel">
-      <h2>Network Configuration</h2>
-      <!-- TODO: Replace with <app-network-config> component when implemented -->
-      <div class="config-placeholder">
-        <p>Configuration controls will appear here</p>
-        <p>Nodes: {{ nodeCount() }}</p>
+  <aside class="sidebar">
+    <section class="sidebar-section">
+      <div class="section-title">Legend</div>
+      <div class="legend-items">
+        @for (item of legendItems; track item.label) {
+          <div class="legend-item">
+            <div class="legend-dot" [style.background]="item.color"></div>
+            <span>{{ item.label }}</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="sidebar-section">
+      <div class="section-title">Control Panel</div>
+      <div class="checkbox-group">
+        <label class="checkbox-item">
+          <input type="checkbox" [checked]="showConnections()" (change)="onShowConnectionsChange($event)" />
+          <span>Show Connections</span>
+        </label>
+        <label class="checkbox-item">
+          <input type="checkbox" [checked]="showDataFlow()" (change)="onShowDataFlowChange($event)" />
+          <span>Show Data Flow</span>
+        </label>
+      </div>
+    </section>
+
+    <section class="sidebar-section">
+      <div class="section-title">Network Configuration</div>
+      <div class="control-panel">
+        <div class="control-group">
+          <div class="slider-container">
+            <div class="control-row">
+              <label class="control-label">Network Size</label>
+              <span class="slider-value">{{ nodeCount() }} nodes</span>
+            </div>
+            <input
+              type="range"
+              min="20"
+              max="100"
+              step="5"
+              [value]="nodeCount()"
+              (input)="onNodeCountChange($event)"
+              [disabled]="isPlaying()"
+            />
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="slider-container">
+            <div class="control-row">
+              <label class="control-label">Animation Speed</label>
+              <span class="slider-value">{{ animationSpeed() | number: '1.1-1' }}x</span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="3"
+              step="0.1"
+              [value]="animationSpeed()"
+              (input)="onAnimationSpeedChange($event)"
+              [disabled]="isPlaying()"
+            />
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="slider-container">
+            <div class="control-row">
+              <label class="control-label">P2P Node Degree</label>
+              <span class="slider-value">{{ averageDegree() }}</span>
+            </div>
+            <input
+              type="range"
+              min="2"
+              max="8"
+              step="1"
+              [value]="averageDegree()"
+              (input)="onAverageDegreeChange($event)"
+              [disabled]="isPlaying()"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sidebar-section">
+      <div class="section-title">TGL Parameters</div>
+      <div class="control-panel">
+        <div class="control-group">
+          <label class="control-label" for="pushBudget">Push Budget</label>
+          <select
+            id="pushBudget"
+            class="dropdown"
+            [value]="pushBudget()"
+            (change)="onPushBudgetChange($event)"
+            [disabled]="isPlaying()"
+          >
+            @for (option of pushBudgetOptions; track option) {
+              <option [value]="option">{{ option }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="gossipBudget">Gossip Budget</label>
+          <select
+            id="gossipBudget"
+            class="dropdown"
+            [value]="gossipBudget()"
+            (change)="onGossipBudgetChange($event)"
+            [disabled]="isPlaying()"
+          >
+            @for (option of gossipBudgetOptions; track option) {
+              <option [value]="option">{{ option }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="pullBudget">Pull Budget</label>
+          <select
+            id="pullBudget"
+            class="dropdown"
+            [value]="pullBudget()"
+            (change)="onPullBudgetChange($event)"
+            [disabled]="isPlaying()"
+          >
+            @for (option of pullBudgetOptions; track option) {
+              <option [value]="option">{{ option }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </section>
+  </aside>
+
+  <main class="content-area">
+    <div class="networks-grid">
+      <div class="network-viewport">
+        <app-network-canvas networkType="p2p"></app-network-canvas>
+      </div>
+      <div class="network-viewport">
+        <app-network-canvas networkType="tgl"></app-network-canvas>
       </div>
     </div>
 
-    <!-- Center Column: P2P Canvas Container -->
-    <div class="canvas-container p2p-canvas">
-      <h3>P2P Gossip Protocol</h3>
-      <!-- TODO: Replace with <app-canvas-container [networkType]="'p2p'"> component when implemented -->
-      <div class="canvas-wrapper">
-        <canvas id="p2p-canvas"></canvas>
-      </div>
-      <div class="canvas-info">
-        <p>Coverage: {{ p2pState().coverage.toFixed(1) }}%</p>
-        <p>Round: {{ p2pState().round }}</p>
-        <p>Messages: {{ p2pState().totalMessagesSent }}</p>
-      </div>
-    </div>
-
-    <!-- Right Column: TGL Canvas Container -->
-    <div class="canvas-container tgl-canvas">
-      <h3>TGL Protocol</h3>
-      <!-- TODO: Replace with <app-canvas-container [networkType]="'tgl'"> component when implemented -->
-      <div class="canvas-wrapper">
-        <canvas id="tgl-canvas"></canvas>
-      </div>
-      <div class="canvas-info">
-        <p>Coverage: {{ tglState().coverage.toFixed(1) }}%</p>
-        <p>Round: {{ tglState().round }}</p>
-        <p>Messages: {{ tglState().totalMessagesSent }}</p>
-      </div>
-    </div>
+    <div class="viewport-label left">Peer-to-Peer Network</div>
+    <div class="viewport-label right">Tiered Gossip Learning (TGL)</div>
+    <div class="stage-badge">{{ stageBadgeText() }}</div>
   </main>
 
-  <!-- Metrics Panel Section -->
   <section class="metrics-panel">
-    <h2>Performance Metrics</h2>
-    <!-- TODO: Replace with <app-metrics-panel> component when implemented -->
-    <div class="metrics-grid">
-      <div class="metric-card">
-        <h4>P2P Protocol</h4>
-        <p>Coverage: {{ p2pState().coverage.toFixed(1) }}%</p>
-        <p>Messages Sent: {{ p2pState().totalMessagesSent }}</p>
+    <div class="metric-card">
+      <div class="metric-header">
+        <span>Peer-to-Peer Network</span>
+        <span class="metric-badge">BASELINE</span>
       </div>
-      <div class="metric-card">
-        <h4>TGL Protocol</h4>
-        <p>Coverage: {{ tglState().coverage.toFixed(1) }}%</p>
-        <p>Messages Sent: {{ tglState().totalMessagesSent }}</p>
+      <div class="metric-row">
+        <span class="metric-label">Round</span>
+        <span class="metric-value neutral">{{ p2pRound() }}</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Messages</span>
+        <span class="metric-value p2p">{{ p2pMessages() }}</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Coverage</span>
+        <span class="metric-value p2p">{{ p2pCoverageLabel() }}</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill p2p" [style.width]="p2pProgressWidth()"></div>
+      </div>
+    </div>
+
+    <div class="metric-card highlight">
+      <div class="metric-header">Comparison</div>
+      <div class="comparison-card">
+        <div class="comparison-row">
+          <div class="comparison-icon">📉</div>
+          <div class="comparison-text">
+            <div class="comparison-label">Msg Reduction</div>
+            <div class="comparison-value">{{ messageReductionLabel() }}</div>
+          </div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-icon">⚡</div>
+          <div class="comparison-text">
+            <div class="comparison-label">Speed Gain</div>
+            <div class="comparison-value">{{ speedGainLabel() }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-header">
+        <span>Tiered Gossip Learning</span>
+        <span class="metric-badge tgl">TGL</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Round</span>
+        <span class="metric-value neutral">{{ tglRound() }}</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Messages</span>
+        <span class="metric-value tgl">{{ tglMessages() }}</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Coverage</span>
+        <span class="metric-value tgl">{{ tglCoverageLabel() }}</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill tgl" [style.width]="tglProgressWidth()"></div>
       </div>
     </div>
   </section>

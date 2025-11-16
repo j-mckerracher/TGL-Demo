@@ -89,8 +89,8 @@ export class SimulationService {
   }
 
   /**
-   * Initializes a P2P network with a circular k-regular topology.
-   * Each node is placed on a circle and connected to exactly degreeK neighbors.
+   * Initializes a P2P network with a k-regular topology.
+   * Each node is placed on a sphere and connected to exactly degreeK neighbors.
    * Node 0 starts with data (ACTIVE state), all others start waiting (IDLE state).
    *
    * @returns A new NetworkState with the initialized P2P network
@@ -99,17 +99,13 @@ export class SimulationService {
     const nodeCount = this.settingsService.nodeCount();
     const degreeK = this.settingsService.averageDegree();
 
-    // Create nodes in a circular layout
+    // Create nodes in a 3D spherical layout
     const nodes: Node[] = [];
-    const radius = 100; // Radius of the circle for node placement
+    const radius = 35; // Radius of the sphere for node placement
 
     for (let i = 0; i < nodeCount; i++) {
-      const angle = (2 * Math.PI * i) / nodeCount;
-      const position: Position3D = {
-        x: radius * Math.cos(angle),
-        y: radius * Math.sin(angle),
-        z: 0, // 2D layout
-      };
+      // Use spherical distribution for 3D visualization
+      const position: Position3D = this.getSphericalPosition(i, nodeCount, radius);
 
       const node: Node = {
         id: `node-${i}`,
@@ -123,7 +119,7 @@ export class SimulationService {
     }
 
     // Build k-regular neighbor connections
-    // Each node connects to k/2 neighbors on each side in the circular arrangement
+    // Each node connects to k neighbors based on their index sequence
     const edges: Edge[] = [];
     const neighborsPerSide = Math.floor(degreeK / 2);
     const extraNeighbor = degreeK % 2; // If degreeK is odd, add one more neighbor
@@ -340,7 +336,18 @@ export class SimulationService {
    */
   public reset(): void {
     this._p2pState.set(this.createInitialState());
+    this._tglState.set(this.createInitialState());
+    this._tglCurrentStage.set(TglStage.PUSH);
     this.transferIdCounter = 0;
+  }
+
+  /**
+   * Convenience helper that reinitializes both P2P and TGL networks
+   * using the current settings snapshot.
+   */
+  public initializeNetworksFromSettings(): void {
+    this.initializeP2pNetwork();
+    this.initializeTglNetwork();
   }
 
   /**
@@ -391,30 +398,27 @@ export class SimulationService {
    * @returns A new NetworkState with the initialized TGL network
    */
   public initializeTglNetwork(): NetworkState {
-    const relayCount = this.settingsService.relayCount();
-    const leafCount = this.settingsService.leafCount();
-    const relayBudget = this.settingsService.relayBudget();
-    const leafBudget = this.settingsService.leafBudget();
+    const relayCount = Math.max(1, this.settingsService.relayCount());
+    const leafCount = Math.max(1, this.settingsService.leafCount());
     const totalNodes = relayCount + leafCount;
 
     const nodes: Node[] = [];
     const edges: Edge[] = [];
 
-    const relayRadius = 20; // Small radius for relay cluster
-    const leafRadius = 100; // Larger radius for leaf sphere
+    const relayRadius = 15; // Small radius for relay cluster
+    const leafRadius = 35; // Larger radius for leaf sphere
 
-    // Create relay nodes near the center
+    // Create relay nodes near the center (all start idle)
     for (let i = 0; i < relayCount; i++) {
       const position: Position3D = this.getCircularPosition(i, relayCount, relayRadius);
 
       const node: Node = {
         id: `relay-${i}`,
         position,
-        state: i === 0 ? NodeState.ACTIVE : NodeState.IDLE,
+        state: NodeState.IDLE,
         neighbors: [],
         isRelay: true,
-        budget: relayBudget,
-        receivedAtRound: i === 0 ? 0 : undefined,
+        receivedAtRound: undefined,
       };
 
       nodes.push(node);
@@ -430,7 +434,6 @@ export class SimulationService {
         state: NodeState.IDLE,
         neighbors: [],
         isRelay: false,
-        budget: leafBudget,
         receivedAtRound: undefined,
       };
 
@@ -454,24 +457,37 @@ export class SimulationService {
       }
     }
 
-    // Assign each leaf to relays (round-robin distribution)
+    // Connect leaves to multiple relays for richer tiered interactions
+    const connectionsPerLeaf = Math.max(1, Math.min(relayCount, this.settingsService.pushBudget()));
+
     for (let i = 0; i < leafCount; i++) {
       const leaf = nodes[relayCount + i];
-      // Assign to primary relay (round-robin)
-      const relayIndex = i % relayCount;
-      const relay = nodes[relayIndex];
 
-      leaf.neighbors.push(relay.id);
-      relay.neighbors.push(leaf.id);
+      for (let connection = 0; connection < connectionsPerLeaf; connection++) {
+        const relayIndex = (i + connection) % relayCount;
+        const relay = nodes[relayIndex];
 
-      edges.push({
-        sourceId: leaf.id,
-        targetId: relay.id,
-        active: false,
-      });
+        if (!leaf.neighbors.includes(relay.id)) {
+          leaf.neighbors.push(relay.id);
+        }
+
+        if (!relay.neighbors.includes(leaf.id)) {
+          relay.neighbors.push(leaf.id);
+        }
+
+        edges.push({
+          sourceId: leaf.id,
+          targetId: relay.id,
+          active: false,
+        });
+      }
     }
 
-    // Calculate initial coverage (only relay-0 has data)
+    // Activate the first leaf as the source node
+    const sourceLeaf = nodes[relayCount];
+    sourceLeaf.state = NodeState.ACTIVE;
+    sourceLeaf.receivedAtRound = 0;
+
     const coverage = (1 / totalNodes) * 100;
 
     const networkState: NetworkState = {
@@ -482,7 +498,7 @@ export class SimulationService {
       coverage,
       protocol: ProtocolType.TGL,
       stage: SimulationStage.INITIALIZING,
-      sourceNodeId: 'relay-0',
+      sourceNodeId: sourceLeaf.id,
       totalMessagesSent: 0,
       startTime: Date.now(),
       endTime: undefined,
@@ -513,6 +529,9 @@ export class SimulationService {
     }
 
     const currentStage = this._tglCurrentStage();
+    const pushBudget = this.settingsService.pushBudget();
+    const gossipBudget = this.settingsService.gossipBudget();
+    const pullBudget = this.settingsService.pullBudget();
     let newNodes = currentState.nodes.map((node) => ({ ...node }));
     const newTransfers: Transfer[] = [];
     let messagesSent = 0;
@@ -521,55 +540,56 @@ export class SimulationService {
 
     // Execute stage-specific logic
     switch (currentStage) {
-      case TglStage.PUSH:
-        // Leaves with data send to their relay
-        const activeLeaves = newNodes.filter(
-          (node) => !node.isRelay && node.state === NodeState.ACTIVE
-        );
+      case TglStage.PUSH: {
+        // Leaves with data push to a limited number of connected relays
+        const activeLeaves = newNodes.filter((node) => !node.isRelay && node.state === NodeState.ACTIVE);
 
         for (const leaf of activeLeaves) {
-          // Send to all connected relays (typically one)
-          const relayNeighbors = leaf.neighbors.filter((neighborId) => {
-            const neighbor = newNodes.find((n) => n.id === neighborId);
-            return neighbor && neighbor.isRelay;
-          });
+          const relayNeighbors = leaf.neighbors
+            .map((neighborId) => newNodes.find((n) => n.id === neighborId))
+            .filter((neighbor): neighbor is Node => Boolean(neighbor && neighbor.isRelay));
 
-          for (const relayId of relayNeighbors) {
+          const eligibleRelays = relayNeighbors.filter((relay) => relay.state === NodeState.IDLE);
+          const targetCount = Math.min(pushBudget, eligibleRelays.length);
+          const selectedRelays = sampleWithoutReplacement(
+            eligibleRelays.map((relay) => relay.id),
+            targetCount
+          );
+
+          for (const relayId of selectedRelays) {
             const relay = newNodes.find((n) => n.id === relayId);
-            if (relay && relay.state === NodeState.IDLE) {
-              // Update relay state
-              relay.state = NodeState.ACTIVE;
-              relay.receivedAtRound = newRound;
-
-              // Create transfer
-              const transfer: Transfer = {
-                id: `transfer-${this.transferIdCounter++}`,
-                sourceId: leaf.id,
-                targetId: relay.id,
-                edgeId: `${leaf.id}-${relay.id}`,
-                progress: 0,
-                state: TransferState.IN_PROGRESS,
-                startTime: Date.now(),
-                round: newRound,
-              };
-
-              newTransfers.push(transfer);
-              messagesSent++;
+            if (!relay) {
+              continue;
             }
+
+            relay.state = NodeState.ACTIVE;
+            relay.receivedAtRound = newRound;
+
+            const transfer: Transfer = {
+              id: `transfer-${this.transferIdCounter++}`,
+              sourceId: leaf.id,
+              targetId: relay.id,
+              edgeId: `${leaf.id}-${relay.id}`,
+              progress: 0,
+              state: TransferState.IN_PROGRESS,
+              startTime: Date.now(),
+              round: newRound,
+            };
+
+            newTransfers.push(transfer);
+            messagesSent++;
           }
         }
 
-        // Advance to Gossip stage
         newStage = TglStage.GOSSIP;
         break;
+      }
 
       case TglStage.GOSSIP:
         // Relays with data exchange with other relays
         const activeRelays = newNodes.filter(
           (node) => node.isRelay && node.state === NodeState.ACTIVE
         );
-
-        const relayBudget = this.settingsService.relayBudget();
 
         for (const relay of activeRelays) {
           // Get other relays that are neighbors and don't have data yet
@@ -578,8 +598,8 @@ export class SimulationService {
             return neighbor && neighbor.isRelay && neighbor.state === NodeState.IDLE;
           });
 
-          // Sample up to relayBudget neighbors
-          const targetCount = Math.min(relayBudget, eligibleRelayNeighbors.length);
+          // Sample up to gossipBudget neighbors
+          const targetCount = Math.min(gossipBudget, eligibleRelayNeighbors.length);
           const selectedRelays = sampleWithoutReplacement(eligibleRelayNeighbors, targetCount);
 
           for (const relayId of selectedRelays) {
@@ -611,48 +631,50 @@ export class SimulationService {
         newStage = TglStage.PULL;
         break;
 
-      case TglStage.PULL:
-        // Relays with data send to their connected leaves
+      case TglStage.PULL: {
+        // Relays with data pull limited leaves in the next round
         const activeRelaysForPull = newNodes.filter(
           (node) => node.isRelay && node.state === NodeState.ACTIVE
         );
 
         for (const relay of activeRelaysForPull) {
-          // Get leaf neighbors that don't have data yet
           const eligibleLeafNeighbors = relay.neighbors.filter((neighborId) => {
             const neighbor = newNodes.find((n) => n.id === neighborId);
             return neighbor && !neighbor.isRelay && neighbor.state === NodeState.IDLE;
           });
 
-          for (const leafId of eligibleLeafNeighbors) {
+          const targetCount = Math.min(pullBudget, eligibleLeafNeighbors.length);
+          const selectedLeaves = sampleWithoutReplacement(eligibleLeafNeighbors, targetCount);
+
+          for (const leafId of selectedLeaves) {
             const leaf = newNodes.find((n) => n.id === leafId);
-            if (leaf) {
-              // Update leaf state
-              leaf.state = NodeState.ACTIVE;
-              leaf.receivedAtRound = newRound + 1; // Next round
-
-              // Create transfer
-              const transfer: Transfer = {
-                id: `transfer-${this.transferIdCounter++}`,
-                sourceId: relay.id,
-                targetId: leaf.id,
-                edgeId: `${relay.id}-${leaf.id}`,
-                progress: 0,
-                state: TransferState.IN_PROGRESS,
-                startTime: Date.now(),
-                round: newRound + 1,
-              };
-
-              newTransfers.push(transfer);
-              messagesSent++;
+            if (!leaf) {
+              continue;
             }
+
+            leaf.state = NodeState.ACTIVE;
+            leaf.receivedAtRound = newRound + 1;
+
+            const transfer: Transfer = {
+              id: `transfer-${this.transferIdCounter++}`,
+              sourceId: relay.id,
+              targetId: leaf.id,
+              edgeId: `${relay.id}-${leaf.id}`,
+              progress: 0,
+              state: TransferState.IN_PROGRESS,
+              startTime: Date.now(),
+              round: newRound + 1,
+            };
+
+            newTransfers.push(transfer);
+            messagesSent++;
           }
         }
 
-        // Advance to next round, reset to Push stage
         newRound = currentState.round + 1;
         newStage = TglStage.PUSH;
         break;
+      }
     }
 
     // Calculate new coverage

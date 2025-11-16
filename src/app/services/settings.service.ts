@@ -49,16 +49,22 @@ export class SettingsService {
   // ===== TGL protocol settings =====
 
   /**
-   * Internal writable signal for relay node message budget.
+   * Internal writable signal for leaf → relay push attempts per stage.
    * Valid range: [1, 10]
    */
-  private readonly _relayBudget = signal(DEFAULT_SETTINGS.relayBudget);
+  private readonly _pushBudget = signal(DEFAULT_SETTINGS.pushBudget);
 
   /**
-   * Internal writable signal for leaf node message budget.
+   * Internal writable signal for relay ↔ relay gossip exchanges per stage.
    * Valid range: [1, 10]
    */
-  private readonly _leafBudget = signal(DEFAULT_SETTINGS.leafBudget);
+  private readonly _gossipBudget = signal(DEFAULT_SETTINGS.gossipBudget);
+
+  /**
+   * Internal writable signal for relay → leaf pull attempts per stage.
+   * Valid range: [1, 10]
+   */
+  private readonly _pullBudget = signal(DEFAULT_SETTINGS.pullBudget);
 
   // ===== Simulation settings =====
 
@@ -140,16 +146,22 @@ export class SettingsService {
   public readonly leafPercentage = this._leafPercentage.asReadonly();
 
   /**
-   * Message budget for relay nodes.
+   * Push budget (leaf → relay attempts per stage).
    * Valid range: [1, 10]
    */
-  public readonly relayBudget = this._relayBudget.asReadonly();
+  public readonly pushBudget = this._pushBudget.asReadonly();
 
   /**
-   * Message budget for leaf nodes.
+   * Gossip budget (relay ↔ relay exchanges per stage).
    * Valid range: [1, 10]
    */
-  public readonly leafBudget = this._leafBudget.asReadonly();
+  public readonly gossipBudget = this._gossipBudget.asReadonly();
+
+  /**
+   * Pull budget (relay → leaf attempts per stage).
+   * Valid range: [1, 10]
+   */
+  public readonly pullBudget = this._pullBudget.asReadonly();
 
   /**
    * Protocol to simulate.
@@ -265,23 +277,33 @@ export class SettingsService {
   }
 
   /**
-   * Sets the message budget for relay nodes.
+   * Sets the push budget (leaf → relay attempts per stage).
    * Value is clamped to [1, 10].
    *
-   * @param value - The desired relay budget
+   * @param value - The desired push budget
    */
-  public setRelayBudget(value: number): void {
-    this._relayBudget.set(clamp(value, 1, 10));
+  public setPushBudget(value: number): void {
+    this._pushBudget.set(clamp(value, 1, 10));
   }
 
   /**
-   * Sets the message budget for leaf nodes.
+   * Sets the gossip budget (relay ↔ relay exchanges per stage).
    * Value is clamped to [1, 10].
    *
-   * @param value - The desired leaf budget
+   * @param value - The desired gossip budget
    */
-  public setLeafBudget(value: number): void {
-    this._leafBudget.set(clamp(value, 1, 10));
+  public setGossipBudget(value: number): void {
+    this._gossipBudget.set(clamp(value, 1, 10));
+  }
+
+  /**
+   * Sets the pull budget (relay → leaf attempts per stage).
+   * Value is clamped to [1, 10].
+   *
+   * @param value - The desired pull budget
+   */
+  public setPullBudget(value: number): void {
+    this._pullBudget.set(clamp(value, 1, 10));
   }
 
   /**

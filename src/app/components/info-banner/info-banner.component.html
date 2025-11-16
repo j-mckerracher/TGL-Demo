@@ -1,0 +1,86 @@
+<div class="info-banner">
+  <div class="banner-section">
+    <div class="section-header">
+      <span class="section-icon">📊</span>
+      <h3>What You're Seeing</h3>
+    </div>
+    <p class="section-content">
+      Compare how information spreads through two network architectures. 
+      <strong>Peer-to-Peer</strong> uses direct connections between all nodes, while 
+      <strong>Tiered Gossip Learning (TGL)</strong> organizes nodes into relay and leaf tiers 
+      for more efficient message propagation with fewer total messages.
+    </p>
+  </div>
+
+  <div class="banner-divider"></div>
+
+  <div class="banner-section">
+    <div class="section-header">
+      <span class="section-icon">🔷</span>
+      <h3>Node Types</h3>
+    </div>
+    <div class="visual-indicators">
+      @for (nodeType of nodeTypes; track nodeType.label) {
+        <div class="indicator-item">
+          <div class="node-visual" [style.background]="nodeType.color">
+            <div class="node-pulse" [style.border-color]="nodeType.color"></div>
+          </div>
+          <div class="indicator-text">
+            <span class="indicator-label">{{ nodeType.label }}</span>
+            <span class="indicator-description">{{ nodeType.description }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="banner-divider"></div>
+
+  <div class="banner-section">
+    <div class="section-header">
+      <span class="section-icon">🎨</span>
+      <h3>Visual Encoding</h3>
+    </div>
+    <div class="visual-indicators">
+      @for (encoding of stateEncodings; track encoding.label) {
+        <div class="indicator-item">
+          <div class="state-visual" [style.background]="encoding.color" [class.animated]="encoding.animation">
+            @if (encoding.animation) {
+              <div class="transfer-particle"></div>
+            }
+          </div>
+          <div class="indicator-text">
+            <span class="indicator-label">{{ encoding.label }}</span>
+            <span class="indicator-description">{{ encoding.description }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="banner-divider"></div>
+
+  <div class="banner-section">
+    <div class="section-header">
+      <span class="section-icon">⚡</span>
+      <h3>TGL Protocol</h3>
+    </div>
+    <div class="protocol-flow">
+      @for (stage of protocolStages; track stage.stage; let isLast = $last) {
+        <div class="protocol-stage">
+          <div class="stage-icon" [style.background]="stage.color">
+            {{ stage.icon }}
+          </div>
+          <div class="stage-info">
+            <span class="stage-label">{{ stage.stage }}</span>
+            <span class="stage-description">{{ stage.description }}</span>
+          </div>
+        </div>
+        @if (!isLast) {
+          <div class="flow-arrow">→</div>
+        }
+      }
+    </div>
+  </div>
+</div>
+

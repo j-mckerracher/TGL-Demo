@@ -6,7 +6,7 @@
 .app-container {
   display: grid;
   grid-template-columns: 280px 1fr;
-  grid-template-rows: 70px 1fr 220px;
+  grid-template-rows: 70px auto 1fr 220px;
   height: 100vh;
   background: #0a0e1a;
   color: #e2e8f0;
@@ -20,6 +20,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 30px;
+}
+
+app-info-banner {
+  grid-column: 1 / -1;
 }
 
 .header-title h1 {
@@ -450,17 +454,25 @@ app-network-canvas > .canvas-container {
 @media (max-width: 1200px) {
   .app-container {
     grid-template-columns: 1fr;
-    grid-template-rows: 70px auto auto;
+    grid-template-rows: 70px auto auto 1fr auto;
+  }
+
+  app-info-banner {
+    grid-row: 2;
   }
 
   .sidebar {
-    grid-row: 2;
+    grid-row: 3;
     flex-direction: row;
     overflow-x: auto;
   }
 
   .content-area {
-    grid-row: 3;
+    grid-row: 4;
     min-height: 400px;
+  }
+
+  .metrics-panel {
+    grid-row: 5;
   }
 }

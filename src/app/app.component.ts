@@ -5,6 +5,7 @@ import { SimulationService, TglStage } from './services/simulation.service';
 import { AnimationService } from './services/animation.service';
 import { MetricsService } from './services/metrics.service';
 import { NetworkCanvasComponent } from './components/network-canvas/network-canvas.component';
+import { InfoBannerComponent } from './components/info-banner/info-banner.component';
 
 /**
  * Root application component for the P2P vs TGL visualization demo.
@@ -15,7 +16,7 @@ import { NetworkCanvasComponent } from './components/network-canvas/network-canv
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, NetworkCanvasComponent],
+  imports: [CommonModule, NetworkCanvasComponent, InfoBannerComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

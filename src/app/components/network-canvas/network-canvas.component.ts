@@ -10,8 +10,6 @@ import {
   effect,
   signal,
 } from '@angular/core';
-import { fromEvent, Subscription } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
 import { ThreeRendererService } from '../../services/three-renderer.service';
 import { SimulationService } from '../../services/simulation.service';
 
@@ -49,9 +47,9 @@ export class NetworkCanvasComponent implements AfterViewInit, OnDestroy {
   private sceneId: string | null = null;
 
   /**
-   * Resize event subscription
+   * Resize observer for responsive canvas sizing
    */
-  private resizeSubscription: Subscription | null = null;
+  private resizeObserver: ResizeObserver | null = null;
 
   /**
    * Signal to track if the component is initialized
@@ -93,11 +91,18 @@ export class NetworkCanvasComponent implements AfterViewInit, OnDestroy {
         this.networkType
       );
 
-      // Mark as initialized to enable effect
-      this.isInitialized.set(true);
+      // Ensure initial sizing happens after layout
+      requestAnimationFrame(() => {
+        if (this.sceneId) {
+          this.threeRenderer.handleResize(this.sceneId);
+          this.renderCurrentState();
+        }
+        // Mark as initialized to enable effect-driven updates
+        this.isInitialized.set(true);
+      });
 
       // Set up resize handler
-      this.setupResizeHandler();
+      this.setupResizeObserver();
     } catch (error) {
       console.error('Failed to initialize Three.js scene:', error);
     }
@@ -106,25 +111,29 @@ export class NetworkCanvasComponent implements AfterViewInit, OnDestroy {
   /**
    * Set up window resize handler
    */
-  private setupResizeHandler(): void {
-    // Listen to window resize events with debounce
-    this.resizeSubscription = fromEvent(window, 'resize')
-      .pipe(debounceTime(100))
-      .subscribe(() => {
-        if (this.sceneId) {
-          this.threeRenderer.handleResize(this.sceneId);
-        }
-      });
+  private setupResizeObserver(): void {
+    if (!this.canvasRef?.nativeElement || this.resizeObserver) {
+      return;
+    }
+
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.sceneId) {
+        this.threeRenderer.handleResize(this.sceneId);
+        this.renderCurrentState();
+      }
+    });
+
+    this.resizeObserver.observe(this.canvasRef.nativeElement);
   }
 
   /**
    * Clean up resources on component destruction
    */
   ngOnDestroy(): void {
-    // Unsubscribe from resize events
-    if (this.resizeSubscription) {
-      this.resizeSubscription.unsubscribe();
-      this.resizeSubscription = null;
+    // Disconnect resize observer
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
     }
 
     // Destroy the Three.js scene
@@ -135,5 +144,21 @@ export class NetworkCanvasComponent implements AfterViewInit, OnDestroy {
 
     // Mark as not initialized
     this.isInitialized.set(false);
+  }
+
+  /**
+   * Immediately render the current network state.
+   * Ensures the canvas is never blank while waiting for reactive updates.
+   */
+  private renderCurrentState(): void {
+    if (!this.sceneId) {
+      return;
+    }
+
+    const state = this.networkType === 'p2p'
+      ? this.simulationService.p2pState()
+      : this.simulationService.tglState();
+
+    this.threeRenderer.updateScene(this.sceneId, state);
   }
 }

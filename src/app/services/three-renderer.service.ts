@@ -64,7 +64,7 @@ export class ThreeRendererService {
 
     // Initialize scene
     const scene = new Scene();
-    scene.background = new Color(0x0a0a0a);
+    scene.background = new Color(0x0a0e1a);
 
     // Initialize camera
     const aspect = canvas.clientWidth / canvas.clientHeight || 1;
@@ -279,7 +279,8 @@ export class ThreeRendererService {
 
         // Update color based on active state
         if (line.material instanceof LineBasicMaterial) {
-          line.material.color = edge.active ? new Color(0x44ff44) : new Color(0x333333);
+          line.material.color = edge.active ? new Color(0x60a5fa) : new Color(0x334155);
+          line.material.opacity = edge.active ? 0.9 : 0.35;
         }
       }
     });
@@ -335,7 +336,7 @@ export class ThreeRendererService {
    * Creates a mesh for a node
    */
   private createNodeMesh(node: Node): Mesh {
-    const geometry = new SphereGeometry(0.5, 16, 16);
+    const geometry = new SphereGeometry(0.35, 24, 24);
     const material = new MeshBasicMaterial({
       color: this.getNodeColor(node.state),
     });
@@ -354,8 +355,10 @@ export class ThreeRendererService {
     ];
     const geometry = new BufferGeometry().setFromPoints(points);
     const material = new LineBasicMaterial({
-      color: edge.active ? 0x44ff44 : 0x333333,
+      color: edge.active ? 0x60a5fa : 0x334155,
       linewidth: 1,
+      opacity: edge.active ? 0.9 : 0.35,
+      transparent: true,
     });
     return new Line(geometry, material);
   }
@@ -366,7 +369,7 @@ export class ThreeRendererService {
   private createParticleMesh(_transfer: Transfer): Mesh {
     const geometry = new SphereGeometry(0.3, 8, 8);
     const material = new MeshBasicMaterial({
-      color: 0xffaa00, // Orange color for particles
+      color: 0x60a5fa,
     });
     return new Mesh(geometry, material);
   }
@@ -377,19 +380,19 @@ export class ThreeRendererService {
   private getNodeColor(state: NodeState): Color {
     switch (state) {
       case NodeState.IDLE:
-        return new Color(0x888888); // Gray
+        return new Color(0x1d4ed8); // Blue
       case NodeState.ACTIVE:
-        return new Color(0x888888); // Gray
+        return new Color(0x22c55e); // Green
       case NodeState.RECEIVING:
-        return new Color(0xffff00); // Yellow
+        return new Color(0xfbbf24); // Amber
       case NodeState.SENDING:
-        return new Color(0x4444ff); // Blue
+        return new Color(0xfbbf24); // Amber
       case NodeState.COMPLETED:
-        return new Color(0x44ff44); // Green
+        return new Color(0x22c55e); // Green
       case NodeState.FAILED:
-        return new Color(0xff4444); // Red
+        return new Color(0xef4444); // Red
       default:
-        return new Color(0x888888); // Gray fallback
+        return new Color(0x1d4ed8); // Default blue
     }
   }
 }

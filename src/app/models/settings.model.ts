@@ -32,11 +32,14 @@ export interface Settings {
   leafPercentage: number;
 
   // TGL protocol settings
-  /** Message budget for relay nodes */
-  relayBudget: number;
+  /** Number of leaf → relay push attempts per stage */
+  pushBudget: number;
 
-  /** Message budget for leaf nodes */
-  leafBudget: number;
+  /** Number of relay ↔ relay gossip exchanges per stage */
+  gossipBudget: number;
+
+  /** Number of relay → leaf pull deliveries per stage */
+  pullBudget: number;
 
   // Simulation settings
   /** Protocol to simulate */
@@ -79,8 +82,9 @@ export const DEFAULT_SETTINGS: Settings = {
   leafPercentage: 80,
 
   // TGL budgets
-  relayBudget: 3,
-  leafBudget: 1,
+  pushBudget: 3,
+  gossipBudget: 2,
+  pullBudget: 2,
 
   // Simulation
   protocol: ProtocolType.FLOODING,
@@ -126,7 +130,8 @@ export const PRESET_SETTINGS = {
     protocol: ProtocolType.TGL,
     relayPercentage: 25,
     leafPercentage: 75,
-    relayBudget: 4,
-    leafBudget: 1,
+    pushBudget: 4,
+    gossipBudget: 3,
+    pullBudget: 2,
   } as Settings,
 };

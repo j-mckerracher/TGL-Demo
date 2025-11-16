@@ -31,6 +31,7 @@ interface SceneContext {
   edgeLines: Map<string, Line>;
   particleMeshes: Map<string, Mesh>;
   networkType: 'p2p' | 'tgl';
+  animationFrameId: number | null;
 }
 
 /**
@@ -80,6 +81,13 @@ export class ThreeRendererService {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    controls.enableZoom = true;
+    controls.enableRotate = true;
+    controls.enablePan = true;
+    controls.minDistance = 20; // Minimum zoom distance
+    controls.maxDistance = 200; // Maximum zoom distance
+    controls.zoomSpeed = 1.0;
+    controls.rotateSpeed = 1.0;
 
     // Store context
     const context: SceneContext = {
@@ -92,9 +100,13 @@ export class ThreeRendererService {
       edgeLines: new Map(),
       particleMeshes: new Map(),
       networkType,
+      animationFrameId: null,
     };
 
     this.scenes.set(sceneId, context);
+
+    // Start continuous render loop for smooth controls
+    this.startRenderLoop(sceneId);
 
     return sceneId;
   }
@@ -120,9 +132,36 @@ export class ThreeRendererService {
     // Update particles (transfers)
     this.updateParticles(context, state.transfers, state.nodes);
 
-    // Update controls and render
-    context.controls.update();
-    context.renderer.render(context.scene, context.camera);
+    // Note: Rendering is handled by the continuous render loop
+  }
+
+  /**
+   * Starts a continuous render loop for a scene to enable smooth OrbitControls
+   * @param sceneId Scene identifier
+   */
+  private startRenderLoop(sceneId: string): void {
+    const context = this.scenes.get(sceneId);
+    if (!context) {
+      return;
+    }
+
+    const animate = () => {
+      // Check if scene still exists
+      if (!this.scenes.has(sceneId)) {
+        return;
+      }
+
+      // Update controls (required for damping)
+      context.controls.update();
+
+      // Render the scene
+      context.renderer.render(context.scene, context.camera);
+
+      // Continue the loop
+      context.animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animate();
   }
 
   /**
@@ -151,6 +190,12 @@ export class ThreeRendererService {
     const context = this.scenes.get(sceneId);
     if (!context) {
       return;
+    }
+
+    // Cancel animation frame loop
+    if (context.animationFrameId !== null) {
+      cancelAnimationFrame(context.animationFrameId);
+      context.animationFrameId = null;
     }
 
     // Dispose all node meshes

@@ -70,14 +70,14 @@ export class MetricsService {
 
   /**
    * Computed signal that calculates comparison metrics between P2P and TGL.
-   * Returns null if either simulation has not completed.
+   * Returns live metrics even before simulations complete.
    */
   readonly comparison = computed<ComparisonMetrics | null>(() => {
     const p2pMetrics = this.p2pMetrics();
     const tglMetrics = this.tglMetrics();
 
-    // Only compute comparison if both simulations are complete
-    if (!p2pMetrics.successful || !tglMetrics.successful) {
+    // Return null if neither simulation has started
+    if (p2pMetrics.totalMessages === 0 && tglMetrics.totalMessages === 0) {
       return null;
     }
 

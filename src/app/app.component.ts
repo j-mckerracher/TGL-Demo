@@ -55,7 +55,6 @@ export class AppComponent implements OnInit {
    */
   public readonly legendItems = [
     { label: 'Inactive Node', color: '#3b82f6' },
-    { label: 'Transmitting', color: '#fbbf24' },
     { label: 'Has Update', color: '#22c55e' },
     { label: 'Source Node', color: '#ef4444' },
     { label: 'Relay Node', color: '#a78bfa' },

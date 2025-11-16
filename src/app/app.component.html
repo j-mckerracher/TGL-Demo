@@ -32,20 +32,19 @@
           <div class="slider-container">
             <div class="control-row">
               <label class="control-label">Animation Speed</label>
-              <span class="slider-value">{{ animationSpeed() | number: '1.1-1' }}x</span>
+              <span class="slider-value">{{ animationSpeed() | number: '1.2-2' }}x</span>
             </div>
             <input
               type="range"
-              min="0.5"
+              min="0.25"
               max="3"
-              step="0.1"
+              step="0.25"
               [value]="animationSpeed()"
               (input)="onAnimationSpeedChange($event)"
               [disabled]="isPlaying()"
             />
           </div>
         </div>
-
         <div class="control-group">
           <div class="slider-container">
             <div class="control-row">
@@ -199,7 +198,7 @@
         <div class="metric">
           <span class="metric-icon">📉</span>
           <div class="metric-content">
-            <span class="metric-label">Msg Reduction</span>
+            <span class="metric-label">Msg Savings</span>
             <span class="metric-value" [class.positive]="messageReduction() && messageReduction()! < 0">{{ messageReductionLabel() }}</span>
           </div>
         </div>

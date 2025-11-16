@@ -19,6 +19,15 @@ import { Edge } from '../models/edge.model';
 import { Transfer } from '../models/transfer.model';
 
 /**
+ * Animation state for a node glow effect
+ */
+interface NodeAnimation {
+  startTime: number;
+  duration: number;
+  previousState: NodeState;
+}
+
+/**
  * Internal context for a single Three.js scene instance
  */
 interface SceneContext {
@@ -32,6 +41,10 @@ interface SceneContext {
   particleMeshes: Map<string, Mesh>;
   networkType: 'p2p' | 'tgl';
   animationFrameId: number | null;
+  nodeAnimations: Map<string, NodeAnimation>;
+  nodeStates: Map<string, NodeState>;
+  nodeMap: Map<string, Node>;
+  sourceNodeId?: string;
 }
 
 /**
@@ -70,7 +83,7 @@ export class ThreeRendererService {
     // Initialize camera
     const aspect = canvas.clientWidth / canvas.clientHeight || 1;
     const camera = new PerspectiveCamera(75, aspect, 0.1, 1000);
-    camera.position.set(0, 0, 50);
+    camera.position.set(0, 0, 70);
 
     // Initialize renderer
     const renderer = new WebGLRenderer({ canvas, antialias: true });
@@ -89,6 +102,11 @@ export class ThreeRendererService {
     controls.zoomSpeed = 1.0;
     controls.rotateSpeed = 1.0;
 
+    // Log zoom level changes
+    controls.addEventListener('change', () => {
+      console.log(`[${networkType.toUpperCase()}] Zoom level: ${camera.position.length().toFixed(2)}`);
+    });
+
     // Store context
     const context: SceneContext = {
       scene,
@@ -101,6 +119,10 @@ export class ThreeRendererService {
       particleMeshes: new Map(),
       networkType,
       animationFrameId: null,
+      nodeAnimations: new Map(),
+      nodeStates: new Map(),
+      nodeMap: new Map(),
+      sourceNodeId: undefined,
     };
 
     this.scenes.set(sceneId, context);
@@ -123,8 +145,13 @@ export class ThreeRendererService {
       return;
     }
 
+    // Update context with current state info
+    context.sourceNodeId = state.sourceNodeId;
+    context.nodeMap.clear();
+    state.nodes.forEach(node => context.nodeMap.set(node.id, node));
+
     // Update nodes
-    this.updateNodes(context, state.nodes);
+    this.updateNodes(context, state.nodes, state.sourceNodeId);
 
     // Update edges
     this.updateEdges(context, state.edges, state.nodes);
@@ -153,6 +180,9 @@ export class ThreeRendererService {
 
       // Update controls (required for damping)
       context.controls.update();
+
+      // Update node animations
+      this.updateNodeAnimations(context);
 
       // Render the scene
       context.renderer.render(context.scene, context.camera);
@@ -241,7 +271,7 @@ export class ThreeRendererService {
   /**
    * Updates node meshes based on current node states
    */
-  private updateNodes(context: SceneContext, nodes: Node[]): void {
+  private updateNodes(context: SceneContext, nodes: Node[], sourceNodeId?: string): void {
     const currentNodeIds = new Set(nodes.map((n) => n.id));
 
     // Remove deleted nodes
@@ -261,18 +291,35 @@ export class ThreeRendererService {
     // Create or update nodes
     nodes.forEach((node) => {
       let mesh = context.nodeMeshes.get(node.id);
+      const previousState = context.nodeStates.get(node.id);
+      const isSourceNode = sourceNodeId === node.id;
 
       if (!mesh) {
-        mesh = this.createNodeMesh(node);
+        mesh = this.createNodeMesh(node, isSourceNode);
         context.nodeMeshes.set(node.id, mesh);
         context.scene.add(mesh);
+        context.nodeStates.set(node.id, node.state);
       } else {
         // Update position
         mesh.position.set(node.position.x, node.position.y, node.position.z);
 
-        // Update color based on state
-        if (mesh.material instanceof MeshBasicMaterial) {
-          mesh.material.color = this.getNodeColor(node.state);
+        // Detect state change and trigger animation
+        if (previousState !== undefined && previousState !== node.state && !context.nodeAnimations.has(node.id)) {
+          // Start glow animation on state change
+          context.nodeAnimations.set(node.id, {
+            startTime: performance.now(),
+            duration: 1200, // 1.2 seconds
+            previousState: previousState,
+          });
+        }
+
+        // Update state tracking
+        context.nodeStates.set(node.id, node.state);
+
+        // Update color based on state (if not animating, this will be overridden in updateNodeAnimations)
+        if (mesh.material instanceof MeshBasicMaterial && !context.nodeAnimations.has(node.id)) {
+          mesh.material.color = this.getNodeColor(node.state, node.isRelay, isSourceNode);
+          mesh.scale.set(1, 1, 1); // Ensure scale is reset
         }
       }
     });
@@ -380,10 +427,10 @@ export class ThreeRendererService {
   /**
    * Creates a mesh for a node
    */
-  private createNodeMesh(node: Node): Mesh {
+  private createNodeMesh(node: Node, isSourceNode: boolean): Mesh {
     const geometry = new SphereGeometry(0.35, 24, 24);
     const material = new MeshBasicMaterial({
-      color: this.getNodeColor(node.state),
+      color: this.getNodeColor(node.state, node.isRelay, isSourceNode),
     });
     const mesh = new Mesh(geometry, material);
     mesh.position.set(node.position.x, node.position.y, node.position.z);
@@ -420,24 +467,103 @@ export class ThreeRendererService {
   }
 
   /**
-   * Maps node state to color
+   * Updates node animations (scale and glow effects)
    */
-  private getNodeColor(state: NodeState): Color {
+  private updateNodeAnimations(context: SceneContext): void {
+    const currentTime = performance.now();
+    const animationsToRemove: string[] = [];
+
+    context.nodeAnimations.forEach((animation, nodeId) => {
+      const mesh = context.nodeMeshes.get(nodeId);
+      if (!mesh || !(mesh.material instanceof MeshBasicMaterial)) {
+        animationsToRemove.push(nodeId);
+        return;
+      }
+
+      const elapsed = currentTime - animation.startTime;
+      const progress = Math.min(elapsed / animation.duration, 1.0);
+
+      // Get node information for proper coloring
+      const node = context.nodeMap.get(nodeId);
+      const isSourceNode = context.sourceNodeId === nodeId;
+
+      if (progress >= 1.0) {
+        // Animation complete - reset to normal state
+        mesh.scale.set(1, 1, 1);
+        const nodeState = context.nodeStates.get(nodeId);
+        if (nodeState && node) {
+          mesh.material.color = this.getNodeColor(nodeState, node.isRelay, isSourceNode);
+        }
+        animationsToRemove.push(nodeId);
+      } else {
+        // Apply easing function (ease-out cubic)
+        const eased = 1 - Math.pow(1 - progress, 3);
+        
+        // Scale animation: 1.0 -> 1.5 -> 1.0
+        let scale: number;
+        if (eased < 0.4) {
+          // First 40%: scale up from 1.0 to 1.5
+          scale = 1.0 + (eased / 0.4) * 0.5;
+        } else {
+          // Remaining 60%: scale down from 1.5 to 1.0
+          scale = 1.5 - ((eased - 0.4) / 0.6) * 0.5;
+        }
+        mesh.scale.set(scale, scale, scale);
+
+        // Glow effect: brighten the color
+        const nodeState = context.nodeStates.get(nodeId);
+        if (nodeState && node) {
+          const baseColor = this.getNodeColor(nodeState, node.isRelay, isSourceNode);
+          let glowIntensity: number;
+          if (eased < 0.4) {
+            // First 40%: increase brightness
+            glowIntensity = (eased / 0.4) * 0.6;
+          } else {
+            // Remaining 60%: decrease brightness
+            glowIntensity = 0.6 - ((eased - 0.4) / 0.6) * 0.6;
+          }
+          
+          // Brighten the color by mixing with white
+          const glowColor = baseColor.clone().lerp(new Color(0xffffff), glowIntensity);
+          mesh.material.color = glowColor;
+        }
+      }
+    });
+
+    // Remove completed animations
+    animationsToRemove.forEach((nodeId) => context.nodeAnimations.delete(nodeId));
+  }
+
+  /**
+   * Maps node state to color, with special handling for source and relay nodes
+   */
+  private getNodeColor(state: NodeState, isRelay?: boolean, isSourceNode?: boolean): Color {
+    // Source node always gets red color (highest priority)
+    if (isSourceNode) {
+      return new Color(0xef4444); // Red - Source Node
+    }
+
+    // Relay nodes get purple color when idle (TGL visualization)
+    if (isRelay && state === NodeState.IDLE) {
+      return new Color(0xa78bfa); // Purple - Relay Node
+    }
+
+    // State-based colors
     switch (state) {
       case NodeState.IDLE:
-        return new Color(0x1d4ed8); // Blue
+        return new Color(0x3b82f6); // Blue - Inactive Node
       case NodeState.ACTIVE:
-        return new Color(0x22c55e); // Green
+        return new Color(0x22c55e); // Green - Has Update
       case NodeState.RECEIVING:
-        return new Color(0xfbbf24); // Amber
+        return new Color(0xfbbf24); // Amber - Transmitting
       case NodeState.SENDING:
-        return new Color(0xfbbf24); // Amber
+        return new Color(0xfbbf24); // Amber - Transmitting
       case NodeState.COMPLETED:
-        return new Color(0x22c55e); // Green
+        return new Color(0x22c55e); // Green - Has Update
       case NodeState.FAILED:
         return new Color(0xef4444); // Red
       default:
-        return new Color(0x1d4ed8); // Default blue
+        return new Color(0x3b82f6); // Default blue
     }
   }
 }

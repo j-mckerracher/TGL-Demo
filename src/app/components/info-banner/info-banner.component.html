@@ -32,11 +32,7 @@
   <div class="visual-indicators">
     @for (encoding of stateEncodings; track encoding.label) {
       <div class="indicator-item">
-        <div class="state-visual" [style.background]="encoding.color" [class.animated]="encoding.animation">
-          @if (encoding.animation) {
-            <div class="transfer-particle"></div>
-          }
-        </div>
+        <div class="state-visual" [style.background]="encoding.color"></div>
         <div class="indicator-text">
           <span class="indicator-label">{{ encoding.label }}</span>
           <span class="indicator-description">{{ encoding.description }}</span>

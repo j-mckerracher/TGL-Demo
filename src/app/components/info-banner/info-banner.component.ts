@@ -50,9 +50,8 @@ export class InfoBannerComponent {
    * Visual state encodings
    */
   public readonly stateEncodings = [
-    { label: 'Idle', color: '#64748b', description: 'Waiting for data' },
+    { label: 'Idle', color: '#3b82f6', description: 'Waiting for data' },
     { label: 'Active', color: '#22c55e', description: 'Has received data' },
-    { label: 'Transferring', animation: 'pulse', description: 'Data in transit' },
   ];
 }
 

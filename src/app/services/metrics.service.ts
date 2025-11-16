@@ -1,4 +1,4 @@
-import { Injectable, inject, computed, signal, effect } from '@angular/core';
+import { Injectable, inject, computed } from '@angular/core';
 import { SimulationService } from './simulation.service';
 import { SettingsService } from './settings.service';
 import { ComparisonMetrics, NetworkMetrics } from '../models/metrics.model';
@@ -14,42 +14,8 @@ export class MetricsService {
   private readonly simulationService = inject(SimulationService);
   private readonly settingsService = inject(SettingsService);
 
-  /**
-   * Tracks the maximum message savings percentage seen during the current simulation.
-   * Only updates when a new maximum is reached.
-   */
-  private maxMessageSavingsValue: number | null = null;
-  private readonly _maxMessageSavings = signal<number | null>(null);
-  public readonly maxMessageSavings = this._maxMessageSavings.asReadonly();
-
   constructor() {
-    // Effect to track and update max message savings
-    effect(() => {
-      const comp = this.comparison();
-      
-      console.log('[MetricsService] Comparison:', comp);
-      
-      // Reset max when simulation restarts (no comparison available)
-      if (comp === null) {
-        console.log('[MetricsService] Resetting max savings to null');
-        this.maxMessageSavingsValue = null;
-        this._maxMessageSavings.set(null);
-        return;
-      }
-
-      const currentReduction = comp.messageReduction;
-      console.log('[MetricsService] Current reduction:', currentReduction);
-
-      // Update max if we have a new maximum
-      if (currentReduction !== null && currentReduction !== undefined && !Number.isNaN(currentReduction)) {
-        console.log('[MetricsService] Current max:', this.maxMessageSavingsValue, 'New value:', currentReduction);
-        if (this.maxMessageSavingsValue === null || currentReduction > this.maxMessageSavingsValue) {
-          console.log('[MetricsService] Setting new max:', currentReduction);
-          this.maxMessageSavingsValue = currentReduction;
-          this._maxMessageSavings.set(currentReduction);
-        }
-      }
-    });
+    // No effect needed - metrics are computed reactively
   }
 
   /**
@@ -149,14 +115,18 @@ export class MetricsService {
 
   /**
    * Computed signal for message reduction percentage.
-   * Returns the maximum message savings percentage seen so far.
-   * Only updates when a new maximum is reached.
+   * Returns the current message reduction in real-time as simulations run.
+   * Returns null if simulations haven't started.
    */
-  readonly messageReduction = computed(() => this.maxMessageSavings());
+  readonly messageReduction = computed(() => {
+    const comp = this.comparison();
+    return comp?.messageReduction ?? null;
+  });
 
   /**
    * Computed signal for speed gain percentage.
    * Positive values indicate TGL was faster than P2P.
+   * Returns real-time values as simulations run.
    */
   readonly speedGain = computed(() => {
     const comp = this.comparison();
@@ -167,11 +137,19 @@ export class MetricsService {
   /**
    * Computed signal for efficiency gain percentage.
    * Positive values indicate TGL was more efficient (fewer messages * rounds).
+   * Returns real-time values as simulations run.
    */
-  readonly efficiencyGain = computed(() => this.comparison()?.efficiencyImprovement ?? null);
+  readonly efficiencyGain = computed(() => {
+    const comp = this.comparison();
+    return comp?.efficiencyImprovement ?? null;
+  });
 
   /**
    * Computed signal indicating whether both simulations have completed.
    */
-  readonly bothComplete = computed(() => this.comparison() !== null);
+  readonly bothComplete = computed(() => {
+    const p2pComplete = this.simulationService.p2pState().isComplete;
+    const tglComplete = this.simulationService.tglState().isComplete;
+    return p2pComplete && tglComplete;
+  });
 }

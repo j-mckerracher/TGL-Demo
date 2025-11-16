@@ -202,16 +202,9 @@
       <!-- Comparison Metrics -->
       <div class="comparison-metrics">
         <div class="metric">
-          <span class="metric-icon">📉</span>
-          <div class="metric-content">
-            <span class="metric-label">Msg Savings</span>
-            <span class="metric-value" [class.positive]="messageReduction() && messageReduction()! < 0">{{ messageReductionLabel() }}</span>
-          </div>
-        </div>
-        <div class="metric">
           <span class="metric-icon">⚡</span>
           <div class="metric-content">
-            <span class="metric-label">Speed Gain</span>
+            <span class="metric-label">Current Speed Gain</span>
             <span class="metric-value" [class.positive]="speedGain() && speedGain()! > 0">{{ speedGainLabel() }}</span>
           </div>
         </div>

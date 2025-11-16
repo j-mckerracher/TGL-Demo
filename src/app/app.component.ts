@@ -218,4 +218,14 @@ export class AppComponent implements OnInit {
         return 'Stage: Idle';
     }
   }
+
+  /**
+   * Smooth scroll to the demo section.
+   */
+  public scrollToDemo(): void {
+    const demoSection = document.getElementById('demo-section');
+    if (demoSection) {
+      demoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 }

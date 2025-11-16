@@ -1,52 +1,12 @@
-<div class="app-container">
-  <header class="header">
-    <div class="header-title">
-      <h1>Tiered Gossip Learning (TGL) vs Peer-to-Peer</h1>
-      <div class="header-subtitle">Interactive Network Propagation Demo</div>
-    </div>
-
-    <div class="playback-controls">
-      <span class="frame-info">
-        Round: <strong>{{ currentRound() }}</strong> / {{ maxRounds() }}
-      </span>
-      <button class="control-btn" type="button" disabled title="Previous Round">⏮</button>
-      <button class="control-btn primary" type="button" (click)="togglePlayback()" title="Play/Pause">
-        {{ isPlaying() ? '⏸' : '▶' }}
-      </button>
-      <button class="control-btn" type="button" disabled title="Next Round">⏭</button>
-      <button class="control-btn" type="button" (click)="onReset()" title="Reset">↻</button>
-    </div>
-  </header>
-
-  <app-info-banner></app-info-banner>
-
+<div class="container">
+  <!-- Left Sidebar - Compact Info Panels -->
   <aside class="sidebar">
-    <section class="sidebar-section">
-      <div class="section-title">Legend</div>
-      <div class="legend-items">
-        @for (item of legendItems; track item.label) {
-          <div class="legend-item">
-            <div class="legend-dot" [style.background]="item.color"></div>
-            <span>{{ item.label }}</span>
-          </div>
-        }
-      </div>
-    </section>
+    <div class="sidebar-header">
+      <h1>P2P vs TGL Network</h1>
+      <p>Interactive Propagation Demo</p>
+    </div>
 
-    <section class="sidebar-section">
-      <div class="section-title">Control Panel</div>
-      <div class="checkbox-group">
-        <label class="checkbox-item">
-          <input type="checkbox" [checked]="showConnections()" (change)="onShowConnectionsChange($event)" />
-          <span>Show Connections</span>
-        </label>
-        <label class="checkbox-item">
-          <input type="checkbox" [checked]="showDataFlow()" (change)="onShowDataFlowChange($event)" />
-          <span>Show Data Flow</span>
-        </label>
-      </div>
-    </section>
-
+    <!-- Configuration Controls -->
     <section class="sidebar-section">
       <div class="section-title">Network Configuration</div>
       <div class="control-panel">
@@ -155,86 +115,120 @@
         </div>
       </div>
     </section>
+
+    <!-- Info Banner Content (Compact Vertical) -->
+    <app-info-banner></app-info-banner>
+
+    <!-- Legend -->
+    <section class="sidebar-section">
+      <div class="section-title">Legend</div>
+      <div class="legend-items">
+        @for (item of legendItems; track item.label) {
+          <div class="legend-item">
+            <div class="legend-dot" [style.background]="item.color"></div>
+            <span>{{ item.label }}</span>
+          </div>
+        }
+      </div>
+    </section>
   </aside>
 
-  <main class="content-area">
-    <div class="networks-grid">
-      <div class="network-viewport">
-        <app-network-canvas networkType="p2p"></app-network-canvas>
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <!-- Top Controls Bar -->
+    <div class="controls-bar">
+      <div class="round-display">
+        Round: <strong>{{ currentRound() }}</strong> / {{ maxRounds() }}
       </div>
-      <div class="network-viewport">
-        <app-network-canvas networkType="tgl"></app-network-canvas>
+      <div class="playback-controls">
+        <button class="control-btn" type="button" disabled title="Previous Round">⏮</button>
+        <button class="control-btn primary" type="button" (click)="togglePlayback()" title="Play/Pause">
+          {{ isPlaying() ? '⏸' : '▶' }}
+        </button>
+        <button class="control-btn" type="button" disabled title="Next Round">⏭</button>
+        <button class="control-btn" type="button" (click)="onReset()" title="Reset">🔄</button>
       </div>
     </div>
 
-    <div class="viewport-label left">Peer-to-Peer Network</div>
-    <div class="viewport-label right">Tiered Gossip Learning (TGL)</div>
-    <div class="stage-badge">{{ stageBadgeText() }}</div>
+    <!-- Visualization Area -->
+    <div class="visualization">
+      <div class="viz-panel">
+        <div class="viz-header">
+          <span>Peer-to-Peer Network</span>
+          <span class="viz-badge">BASELINE</span>
+        </div>
+        <div class="canvas-area">
+          <app-network-canvas networkType="p2p"></app-network-canvas>
+        </div>
+      </div>
+
+      <div class="viz-panel">
+        <div class="viz-header">
+          <span>Tiered Gossip Learning (TGL)</span>
+          <span class="viz-badge tgl">TGL</span>
+        </div>
+        <div class="canvas-area">
+          <app-network-canvas networkType="tgl"></app-network-canvas>
+          <div class="stage-indicator">{{ stageBadgeText() }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Stats Bar -->
+    <div class="stats-bar">
+      <!-- P2P Stats -->
+      <div class="stat-group">
+        <div class="stat-item">
+          <span class="stat-label">P2P Round</span>
+          <span class="stat-value baseline">{{ p2pRound() }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">P2P Messages</span>
+          <span class="stat-value baseline">{{ p2pMessages() }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">P2P Coverage</span>
+          <span class="stat-value baseline">{{ p2pCoverageLabel() }}</span>
+        </div>
+      </div>
+
+      <div class="comparison-divider"></div>
+
+      <!-- Comparison Metrics -->
+      <div class="comparison-metrics">
+        <div class="metric">
+          <span class="metric-icon">📉</span>
+          <div class="metric-content">
+            <span class="metric-label">Msg Reduction</span>
+            <span class="metric-value" [class.positive]="messageReduction() && messageReduction()! < 0">{{ messageReductionLabel() }}</span>
+          </div>
+        </div>
+        <div class="metric">
+          <span class="metric-icon">⚡</span>
+          <div class="metric-content">
+            <span class="metric-label">Speed Gain</span>
+            <span class="metric-value" [class.positive]="speedGain() && speedGain()! > 0">{{ speedGainLabel() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="comparison-divider"></div>
+
+      <!-- TGL Stats -->
+      <div class="stat-group">
+        <div class="stat-item">
+          <span class="stat-label">TGL Round</span>
+          <span class="stat-value tgl">{{ tglRound() }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">TGL Messages</span>
+          <span class="stat-value tgl">{{ tglMessages() }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">TGL Coverage</span>
+          <span class="stat-value tgl">{{ tglCoverageLabel() }}</span>
+        </div>
+      </div>
+    </div>
   </main>
-
-  <section class="metrics-panel">
-    <div class="metric-card">
-      <div class="metric-header">
-        <span>Peer-to-Peer Network</span>
-        <span class="metric-badge">BASELINE</span>
-      </div>
-      <div class="metric-row">
-        <span class="metric-label">Round</span>
-        <span class="metric-value neutral">{{ p2pRound() }}</span>
-      </div>
-      <div class="metric-row">
-        <span class="metric-label">Messages</span>
-        <span class="metric-value p2p">{{ p2pMessages() }}</span>
-      </div>
-      <div class="metric-row">
-        <span class="metric-label">Coverage</span>
-        <span class="metric-value p2p">{{ p2pCoverageLabel() }}</span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-fill p2p" [style.width]="p2pProgressWidth()"></div>
-      </div>
-    </div>
-
-    <div class="metric-card highlight">
-      <div class="metric-header">Comparison</div>
-      <div class="comparison-card">
-        <div class="comparison-row">
-          <div class="comparison-icon">📉</div>
-          <div class="comparison-text">
-            <div class="comparison-label">Msg Reduction</div>
-            <div class="comparison-value">{{ messageReductionLabel() }}</div>
-          </div>
-        </div>
-        <div class="comparison-row">
-          <div class="comparison-icon">⚡</div>
-          <div class="comparison-text">
-            <div class="comparison-label">Speed Gain</div>
-            <div class="comparison-value">{{ speedGainLabel() }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="metric-card">
-      <div class="metric-header">
-        <span>Tiered Gossip Learning</span>
-        <span class="metric-badge tgl">TGL</span>
-      </div>
-      <div class="metric-row">
-        <span class="metric-label">Round</span>
-        <span class="metric-value neutral">{{ tglRound() }}</span>
-      </div>
-      <div class="metric-row">
-        <span class="metric-label">Messages</span>
-        <span class="metric-value tgl">{{ tglMessages() }}</span>
-      </div>
-      <div class="metric-row">
-        <span class="metric-label">Coverage</span>
-        <span class="metric-value tgl">{{ tglCoverageLabel() }}</span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-fill tgl" [style.width]="tglProgressWidth()"></div>
-      </div>
-    </div>
-  </section>
 </div>

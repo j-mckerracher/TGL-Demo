@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SettingsService } from './services/settings.service';
 import { SimulationService, TglStage } from './services/simulation.service';
@@ -94,6 +94,34 @@ export class AppComponent implements OnInit {
   public readonly speedGainLabel = computed(() => this.formatMetricPercentage(this.speedGain()));
 
   /**
+   * Local UI state for dismissing the completion popup.
+   */
+  private readonly completionPopupDismissed = signal(true);
+
+  public readonly coverageDifference = computed(() => {
+    const value = this.messageReduction();
+    if (value === null || Number.isNaN(value)) {
+      return null;
+    }
+    return {
+      percent: Math.abs(Math.round(value)),
+      direction: value >= 0 ? 'fewer' : 'more',
+    };
+  });
+  public readonly showCoveragePopup = computed(() => this.metricsService.bothComplete() && !this.completionPopupDismissed());
+
+  constructor() {
+    effect(() => {
+      const complete = this.metricsService.bothComplete();
+      if (complete) {
+        this.completionPopupDismissed.set(false);
+      } else {
+        this.completionPopupDismissed.set(true);
+      }
+    });
+  }
+
+  /**
    * Initialize both simulations when the component is mounted.
    */
   public ngOnInit(): void {
@@ -116,6 +144,13 @@ export class AppComponent implements OnInit {
    */
   public onReset(): void {
     this.animationService.reset();
+  }
+
+  /**
+   * Dismiss the completion popup until the next run finishes.
+   */
+  public dismissCoveragePopup(): void {
+    this.completionPopupDismissed.set(true);
   }
 
   /**

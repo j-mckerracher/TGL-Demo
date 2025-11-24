@@ -179,7 +179,7 @@
       </div>
       <div class="controls-center">
         <div class="round-display">
-          Round: <strong>{{ currentRound() }}</strong> / {{ maxRounds() }}
+          Round: <strong>{{ currentRound() }}</strong>
         </div>
         <div class="playback-controls">
           <button class="control-btn" type="button" disabled title="Previous Round">⏮</button>
@@ -220,15 +220,15 @@
     <div class="stats-bar">
       <!-- P2P Stats -->
       <div class="stat-group">
-        <div class="stat-item">
+        <div class="stat-item" title="Latest round reached by the baseline flooding network">
           <span class="stat-label">P2P Round</span>
           <span class="stat-value baseline">{{ p2pRound() }}</span>
         </div>
-        <div class="stat-item">
+        <div class="stat-item" title="Cumulative peer-to-peer message exchanges">
           <span class="stat-label">P2P Messages</span>
           <span class="stat-value baseline">{{ p2pMessages() }}</span>
         </div>
-        <div class="stat-item">
+        <div class="stat-item" title="Share of nodes that already received the update in the P2P network">
           <span class="stat-label">P2P Coverage</span>
           <span class="stat-value baseline">{{ p2pCoverageLabel() }}</span>
         </div>
@@ -238,7 +238,7 @@
 
       <!-- Comparison Metrics -->
       <div class="comparison-metrics">
-        <div class="metric">
+        <div class="metric" title="Real-time speed advantage of TGL vs baseline flooding">
           <span class="metric-icon">⚡</span>
           <div class="metric-content">
             <span class="metric-label">Current Speed Gain</span>
@@ -251,20 +251,43 @@
 
       <!-- TGL Stats -->
       <div class="stat-group">
-        <div class="stat-item">
+        <div class="stat-item" title="Latest round reached by the Tiered Gossip Learning run">
           <span class="stat-label">TGL Round</span>
           <span class="stat-value tgl">{{ tglRound() }}</span>
         </div>
-        <div class="stat-item">
+        <div class="stat-item" title="Cumulative Tiered Gossip message exchanges">
           <span class="stat-label">TGL Messages</span>
           <span class="stat-value tgl">{{ tglMessages() }}</span>
         </div>
-        <div class="stat-item">
+        <div class="stat-item" title="Share of nodes that already received the update in the TGL network">
           <span class="stat-label">TGL Coverage</span>
           <span class="stat-value tgl">{{ tglCoverageLabel() }}</span>
         </div>
       </div>
     </div>
   </main>
+
+  @if (showCoveragePopup()) {
+    <div class="coverage-popup-backdrop">
+      <div class="coverage-popup">
+        <p class="coverage-popup-eyebrow">Run Complete</p>
+        <h3>Coverage reached with a clear exchange gap</h3>
+        @if (coverageDifference(); as diff) {
+          <p class="coverage-popup-body">
+            TGL reached 100% coverage with
+            <strong>{{ diff.percent }}% {{ diff.direction }}</strong>
+            exchanges than baseline P2P.
+          </p>
+        } @else {
+          <p class="coverage-popup-body">
+            Coverage results are ready as soon as both simulations finish.
+          </p>
+        }
+        <button type="button" class="coverage-popup-button" (click)="dismissCoveragePopup()">
+          Continue Exploring
+        </button>
+      </div>
+    </div>
+  }
 </div>
 </div>

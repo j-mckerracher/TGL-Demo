@@ -471,6 +471,65 @@ app-network-canvas {
   align-items: center;
 }
 
+.coverage-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1400;
+}
+
+.coverage-popup {
+  width: min(420px, 100%);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.98));
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.65);
+  color: #e2e8f0;
+}
+
+.coverage-popup-eyebrow {
+  margin: 0 0 6px 0;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #818cf8;
+}
+
+.coverage-popup h3 {
+  margin: 0 0 12px 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.coverage-popup-body {
+  margin: 0 0 20px 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #cbd5f5;
+}
+
+.coverage-popup-button {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #34d399, #10b981);
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.coverage-popup-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(16, 185, 129, 0.35);
+}
+
 .stat-group {
   display: flex;
   gap: 24px;

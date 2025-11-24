@@ -220,6 +220,21 @@ export class ThreeRendererService {
   }
 
   /**
+   * Resets the camera position and controls target for a scene.
+   * Useful when the user wants to re-center after rotating or panning.
+   */
+  resetView(sceneId: string): void {
+    const context = this.scenes.get(sceneId);
+    if (!context) {
+      return;
+    }
+
+    context.camera.position.set(0, 0, 70);
+    context.controls.target.set(0, 0, 0);
+    context.controls.update();
+  }
+
+  /**
    * Destroys a scene and cleans up all resources
    * @param sceneId Scene identifier
    */
@@ -660,8 +675,11 @@ export class ThreeRendererService {
       return new Color(0xef4444); // Red - Source Node
     }
 
-    // Relay nodes get orange color when idle (TGL visualization) - high contrast
-    if (isRelay && state === NodeState.IDLE) {
+    // Relay nodes stay orange to remain visually distinct (unless failed)
+    if (isRelay && !isSourceNode) {
+      if (state === NodeState.FAILED) {
+        return new Color(0xef4444);
+      }
       return new Color(0xff8c00); // Dark Orange - Relay Node
     }
 

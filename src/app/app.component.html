@@ -272,12 +272,47 @@
       <div class="coverage-popup">
         <p class="coverage-popup-eyebrow">Run Complete</p>
         <h3>Coverage reached with a clear exchange gap</h3>
-        @if (coverageDifference(); as diff) {
-          <p class="coverage-popup-body">
-            TGL reached 100% coverage with
-            <strong>{{ diff.percent }}% {{ diff.direction }}</strong>
-            exchanges than baseline P2P.
-          </p>
+        @if (completionStats(); as stats) {
+          @if (coverageDifference(); as diff) {
+            <p class="coverage-popup-body">
+              TGL reached 100% coverage with
+              <strong>{{ diff.percent }}% {{ diff.direction }}</strong>
+              exchanges than baseline P2P.
+            </p>
+          } @else {
+            <p class="coverage-popup-body">
+              TGL finished the run with measurable savings over baseline flooding.
+            </p>
+          }
+
+          <div class="coverage-popup-grid">
+            @for (stat of stats; track stat.id) {
+              <div class="coverage-card">
+                <div class="coverage-card-header">
+                  <span class="coverage-card-title">{{ stat.title }}</span>
+                  <span
+                    class="coverage-card-badge"
+                    [class.positive]="stat.positive === true"
+                    [class.negative]="stat.positive === false"
+                  >
+                    {{ stat.diffLabel }}
+                  </span>
+                </div>
+                <p class="coverage-card-subtitle">{{ stat.subtitle }}</p>
+                <div class="coverage-card-values">
+                  <div class="coverage-card-value">
+                    <span class="value-label">TGL</span>
+                    <span class="value-number">{{ stat.tglValue }}</span>
+                  </div>
+                  <div class="coverage-card-value">
+                    <span class="value-label baseline">P2P</span>
+                    <span class="value-number baseline">{{ stat.p2pValue }}</span>
+                  </div>
+                </div>
+                <span class="coverage-card-note">{{ stat.descriptor }}</span>
+              </div>
+            }
+          </div>
         } @else {
           <p class="coverage-popup-body">
             Coverage results are ready as soon as both simulations finish.

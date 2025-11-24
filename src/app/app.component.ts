@@ -6,6 +6,7 @@ import { AnimationService } from './services/animation.service';
 import { MetricsService } from './services/metrics.service';
 import { NetworkCanvasComponent } from './components/network-canvas/network-canvas.component';
 import { InfoBannerComponent } from './components/info-banner/info-banner.component';
+import { HeroSectionComponent } from './components/hero-section/hero-section.component';
 
 interface CompletionStatCard {
   id: 'exchanges' | 'communication' | 'speed';
@@ -28,7 +29,7 @@ interface CompletionStatCard {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, NetworkCanvasComponent, InfoBannerComponent],
+  imports: [CommonModule, NetworkCanvasComponent, InfoBannerComponent, HeroSectionComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

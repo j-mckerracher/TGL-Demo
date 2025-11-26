@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SettingsService } from './services/settings.service';
 import { SimulationService, TglStage } from './services/simulation.service';
@@ -6,6 +6,19 @@ import { AnimationService } from './services/animation.service';
 import { MetricsService } from './services/metrics.service';
 import { NetworkCanvasComponent } from './components/network-canvas/network-canvas.component';
 import { InfoBannerComponent } from './components/info-banner/info-banner.component';
+import { HeroSectionComponent } from './components/hero-section/hero-section.component';
+
+interface CompletionStatCard {
+  id: 'exchanges' | 'communication' | 'speed';
+  title: string;
+  subtitle: string;
+  tglValue: string;
+  p2pValue: string;
+  diffPercent: number | null;
+  diffLabel: string;
+  descriptor: string;
+  positive: boolean | null;
+}
 
 /**
  * Root application component for the P2P vs TGL visualization demo.
@@ -16,7 +29,7 @@ import { InfoBannerComponent } from './components/info-banner/info-banner.compon
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, NetworkCanvasComponent, InfoBannerComponent],
+  imports: [CommonModule, NetworkCanvasComponent, InfoBannerComponent, HeroSectionComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -92,6 +105,100 @@ export class AppComponent implements OnInit {
   public readonly speedGain = this.metricsService.speedGain;
   public readonly messageReductionLabel = computed(() => this.formatMetricPercentage(this.messageReduction()));
   public readonly speedGainLabel = computed(() => this.formatMetricPercentage(this.speedGain()));
+  public readonly completionStats = computed<CompletionStatCard[] | null>(() => {
+    const comparison = this.metricsService.comparison();
+    if (!comparison) {
+      return null;
+    }
+
+    const exchangesDiff = comparison.flooding.totalMessages > 0
+      ? ((comparison.flooding.totalMessages - comparison.tgl.totalMessages) / comparison.flooding.totalMessages) * 100
+      : null;
+
+    const roundsDiff = comparison.flooding.totalRounds > 0
+      ? ((comparison.flooding.totalRounds - comparison.tgl.totalRounds) / comparison.flooding.totalRounds) * 100
+      : null;
+
+    const speedDiff = comparison.flooding.completionTime > 0
+      ? ((comparison.flooding.completionTime - comparison.tgl.completionTime) / comparison.flooding.completionTime) * 100
+      : null;
+
+    return [
+      this.createCompletionStatCard({
+        id: 'exchanges',
+        title: 'Exchanges',
+        subtitle: 'Total message transmissions',
+        tglRawValue: comparison.tgl.totalMessages,
+        p2pRawValue: comparison.flooding.totalMessages,
+        diffPercent: exchangesDiff,
+        positiveWord: 'fewer',
+        negativeWord: 'more',
+        descriptor: 'Less chatter required',
+        formatter: (value) => this.formatCount(value),
+      }),
+      this.createCompletionStatCard({
+        id: 'communication',
+        title: 'Communication',
+        subtitle: 'Rounds to reach coverage',
+        tglRawValue: comparison.tgl.totalRounds,
+        p2pRawValue: comparison.flooding.totalRounds,
+        diffPercent: roundsDiff,
+        positiveWord: 'fewer',
+        negativeWord: 'more',
+        descriptor: 'Rounds saved overall',
+        formatter: (value) => this.formatCount(value),
+      }),
+      this.createCompletionStatCard({
+        id: 'speed',
+        title: 'Speed',
+        subtitle: 'Time to full coverage',
+        tglRawValue: comparison.tgl.completionTime,
+        p2pRawValue: comparison.flooding.completionTime,
+        diffPercent: speedDiff,
+        positiveWord: 'faster',
+        negativeWord: 'slower',
+        descriptor: 'Wall-clock improvement',
+        formatter: (value) => this.formatDuration(value),
+      }),
+    ];
+  });
+
+  /**
+   * Local UI state for dismissing the completion popup.
+   */
+  private readonly completionPopupDismissed = signal(true);
+  private readonly numberFormatter = new Intl.NumberFormat('en-US');
+
+  public readonly coverageDifference = computed(() => {
+    const stats = this.completionStats();
+    if (!stats) {
+      return null;
+    }
+    const exchangesStat = stats.find((stat) => stat.id === 'exchanges');
+    if (!exchangesStat || exchangesStat.diffPercent === null) {
+      return null;
+    }
+
+    return {
+      percent: Math.abs(Math.round(exchangesStat.diffPercent)),
+      direction: exchangesStat.diffPercent >= 0 ? 'fewer' : 'more',
+    };
+  });
+  public readonly showCoveragePopup = computed(() => this.metricsService.bothComplete() && !this.completionPopupDismissed());
+
+  constructor() {
+    effect(
+      () => {
+        const complete = this.metricsService.bothComplete();
+        if (complete) {
+          this.completionPopupDismissed.set(false);
+        } else {
+          this.completionPopupDismissed.set(true);
+        }
+      },
+      { allowSignalWrites: true }
+    );
+  }
 
   /**
    * Initialize both simulations when the component is mounted.
@@ -116,6 +223,13 @@ export class AppComponent implements OnInit {
    */
   public onReset(): void {
     this.animationService.reset();
+  }
+
+  /**
+   * Dismiss the completion popup until the next run finishes.
+   */
+  public dismissCoveragePopup(): void {
+    this.completionPopupDismissed.set(true);
   }
 
   /**
@@ -195,6 +309,55 @@ export class AppComponent implements OnInit {
     }
     const sign = value > 0 ? '+' : '';
     return `${sign}${value.toFixed(0)}%`;
+  }
+
+  private createCompletionStatCard(config: {
+    id: CompletionStatCard['id'];
+    title: string;
+    subtitle: string;
+    tglRawValue: number;
+    p2pRawValue: number;
+    diffPercent: number | null;
+    positiveWord: string;
+    negativeWord: string;
+    descriptor: string;
+    formatter: (value: number) => string;
+  }): CompletionStatCard {
+    const { diffPercent } = config;
+    const positive = diffPercent === null ? null : diffPercent >= 0;
+
+    let diffLabel = '--';
+    if (diffPercent !== null && Number.isFinite(diffPercent)) {
+      diffLabel = `${Math.abs(Math.round(diffPercent))}% ${diffPercent >= 0 ? config.positiveWord : config.negativeWord}`;
+    }
+
+    return {
+      id: config.id,
+      title: config.title,
+      subtitle: config.subtitle,
+      tglValue: config.formatter(config.tglRawValue),
+      p2pValue: config.formatter(config.p2pRawValue),
+      diffPercent,
+      diffLabel,
+      descriptor: config.descriptor,
+      positive,
+    };
+  }
+
+  private formatCount(value: number): string {
+    return this.numberFormatter.format(Math.max(0, Math.round(value)));
+  }
+
+  private formatDuration(valueMs: number): string {
+    if (!Number.isFinite(valueMs) || valueMs <= 0) {
+      return '0.0s';
+    }
+
+    const seconds = valueMs / 1000;
+    if (seconds >= 10) {
+      return `${seconds.toFixed(1)}s`;
+    }
+    return `${seconds.toFixed(2)}s`;
   }
 
   /**

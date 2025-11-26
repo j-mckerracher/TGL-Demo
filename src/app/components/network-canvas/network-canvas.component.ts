@@ -161,4 +161,14 @@ export class NetworkCanvasComponent implements AfterViewInit, OnDestroy {
 
     this.threeRenderer.updateScene(this.sceneId, state);
   }
+
+  /**
+   * Reset the camera/controls back to the default view for this scene.
+   */
+  public resetView(): void {
+    if (!this.sceneId) {
+      return;
+    }
+    this.threeRenderer.resetView(this.sceneId);
+  }
 }

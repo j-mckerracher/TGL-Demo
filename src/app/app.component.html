@@ -1,270 +1,277 @@
 <div class="page-wrapper">
-  <!-- Hero Section -->
-  <section class="hero-section">
-    <div class="hero-content">
-      <h1 class="hero-title">Tiered Gossip Learning</h1>
-      <p class="hero-subtitle">Scalable Collaborative Learning Without Coordination</p>
-      
-      <div class="hero-stats">
-        <div class="stat-card">
-          <div class="stat-number">3×</div>
-          <div class="stat-label">Less Communication</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">2/3</div>
-          <div class="stat-label">Fewer Exchanges</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">100%</div>
-          <div class="stat-label">Fully Decentralized</div>
-        </div>
-      </div>
-
-      <p class="hero-description">
-        Tiered Gossip Learning (TGL) combines the fault tolerance of peer-to-peer training with the efficiency of hierarchical aggregation. 
-        Explore this interactive visualization of TGL's three-stage communication process: leaves push models to relays, relays gossip among themselves, 
-        and leaves pull updated models—all without central coordination. Watch real-time communication patterns as distributed devices exchange models 
-        through randomized connections, demonstrating how hierarchical structure and decentralized aggregation enable scalable, efficient training.
-      </p>
-
-      <button class="hero-button" (click)="scrollToDemo()">
-        View Demo
-        <span class="scroll-icon">↓</span>
-      </button>
-    </div>
-  </section>
+  <app-hero-section (viewDemo)="scrollToDemo()"></app-hero-section>
 
   <!-- Demo Section -->
   <div class="container" id="demo-section">
-  <!-- Left Sidebar - Compact Info Panels -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <h1>P2P vs TGL Network</h1>
-      <p>Interactive Propagation Demo</p>
-    </div>
+    <!-- Left Sidebar - Compact Info Panels -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>P2P vs TGL Network</h1>
+        <p>Interactive Propagation Demo</p>
+      </div>
 
-    <!-- Configuration Controls -->
-    <section class="sidebar-section">
-      <div class="section-title">Network Configuration</div>
-      <div class="control-panel">
-        <div class="control-group">
-          <div class="slider-container">
-            <div class="control-row">
-              <label class="control-label">Network Size</label>
-              <span class="slider-value">{{ nodeCount() }} nodes</span>
+      <!-- Configuration Controls -->
+      <section class="sidebar-section">
+        <div class="section-title">Network Configuration</div>
+        <div class="control-panel">
+          <div class="control-group">
+            <div class="slider-container">
+              <div class="control-row">
+                <label class="control-label">Network Size</label>
+                <span class="slider-value">{{ nodeCount() }} nodes</span>
+              </div>
+              <input type="range" min="20" max="100" step="5" [value]="nodeCount()" (input)="onNodeCountChange($event)"
+                [disabled]="isPlaying()" />
             </div>
-            <input
-              type="range"
-              min="20"
-              max="100"
-              step="5"
-              [value]="nodeCount()"
-              (input)="onNodeCountChange($event)"
-              [disabled]="isPlaying()"
-            />
+          </div>
+
+          <div class="control-group">
+            <div class="slider-container">
+              <div class="control-row">
+                <label class="control-label">Animation Speed</label>
+                <span class="slider-value">{{ animationSpeed() | number: '1.2-2' }}x</span>
+              </div>
+              <input type="range" min="0.25" max="3" step="0.25" [value]="animationSpeed()"
+                (input)="onAnimationSpeedChange($event)" [disabled]="isPlaying()" />
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="slider-container">
+              <div class="control-row">
+                <label class="control-label">P2P Node Degree</label>
+                <span class="slider-value">{{ averageDegree() }}</span>
+              </div>
+              <input type="range" min="2" max="8" step="1" [value]="averageDegree()"
+                (input)="onAverageDegreeChange($event)" [disabled]="isPlaying()" />
+            </div>
           </div>
         </div>
+      </section>
 
-        <div class="control-group">
-          <div class="slider-container">
-            <div class="control-row">
-              <label class="control-label">Animation Speed</label>
-              <span class="slider-value">{{ animationSpeed() | number: '1.2-2' }}x</span>
-            </div>
-            <input
-              type="range"
-              min="0.25"
-              max="3"
-              step="0.25"
-              [value]="animationSpeed()"
-              (input)="onAnimationSpeedChange($event)"
-              [disabled]="isPlaying()"
-            />
+      <section class="sidebar-section">
+        <div class="section-title">TGL Parameters</div>
+        <div class="control-panel">
+          <div class="control-group">
+            <label class="control-label" for="pushBudget">Push Budget</label>
+            <select id="pushBudget" class="dropdown" [value]="pushBudget()" (change)="onPushBudgetChange($event)"
+              [disabled]="isPlaying()">
+              @for (option of pushBudgetOptions; track option) {
+              <option [value]="option">{{ option }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="gossipBudget">Gossip Budget</label>
+            <select id="gossipBudget" class="dropdown" [value]="gossipBudget()" (change)="onGossipBudgetChange($event)"
+              [disabled]="isPlaying()">
+              @for (option of gossipBudgetOptions; track option) {
+              <option [value]="option">{{ option }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="pullBudget">Pull Budget</label>
+            <select id="pullBudget" class="dropdown" [value]="pullBudget()" (change)="onPullBudgetChange($event)"
+              [disabled]="isPlaying()">
+              @for (option of pullBudgetOptions; track option) {
+              <option [value]="option">{{ option }}</option>
+              }
+            </select>
           </div>
         </div>
-        <div class="control-group">
-          <div class="slider-container">
-            <div class="control-row">
-              <label class="control-label">P2P Node Degree</label>
-              <span class="slider-value">{{ averageDegree() }}</span>
-            </div>
-            <input
-              type="range"
-              min="2"
-              max="8"
-              step="1"
-              [value]="averageDegree()"
-              (input)="onAverageDegreeChange($event)"
-              [disabled]="isPlaying()"
-            />
+      </section>
+
+      <!-- Info Banner Content (Compact Vertical) -->
+      <app-info-banner></app-info-banner>
+
+
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Controls Bar -->
+      <div class="controls-bar">
+        <div class="interaction-tips">
+          <span class="tip-icon">💡</span>
+          <span class="tip-text">Scroll to zoom • Drag to rotate • Right-click to pan</span>
+        </div>
+        <div class="controls-center">
+          <div class="round-display">
+            Round: <strong>{{ currentRound() }}</strong>
+          </div>
+          <div class="playback-controls">
+            <button class="control-btn" type="button" disabled title="Previous Round">⏮</button>
+            <button class="control-btn primary" type="button" (click)="togglePlayback()" title="Play/Pause">
+              {{ isPlaying() ? '⏸' : '▶' }}
+            </button>
+            <button class="control-btn" type="button" disabled title="Next Round">⏭</button>
+            <button class="control-btn" type="button" (click)="onReset()" title="Reset">🔄 RESET</button>
           </div>
         </div>
       </div>
-    </section>
 
-    <section class="sidebar-section">
-      <div class="section-title">TGL Parameters</div>
-      <div class="control-panel">
-        <div class="control-group">
-          <label class="control-label" for="pushBudget">Push Budget</label>
-          <select
-            id="pushBudget"
-            class="dropdown"
-            [value]="pushBudget()"
-            (change)="onPushBudgetChange($event)"
-            [disabled]="isPlaying()"
-          >
-            @for (option of pushBudgetOptions; track option) {
-              <option [value]="option">{{ option }}</option>
-            }
-          </select>
+      <!-- Visualization Area -->
+      <div class="visualization">
+        <div class="viz-panel">
+          <div class="viz-header">
+            <span>Peer-to-Peer Network</span>
+            <span class="viz-badge">BASELINE</span>
+          </div>
+          <div class="canvas-area">
+            <app-network-canvas networkType="p2p"></app-network-canvas>
+          </div>
         </div>
 
-        <div class="control-group">
-          <label class="control-label" for="gossipBudget">Gossip Budget</label>
-          <select
-            id="gossipBudget"
-            class="dropdown"
-            [value]="gossipBudget()"
-            (change)="onGossipBudgetChange($event)"
-            [disabled]="isPlaying()"
-          >
-            @for (option of gossipBudgetOptions; track option) {
-              <option [value]="option">{{ option }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="control-group">
-          <label class="control-label" for="pullBudget">Pull Budget</label>
-          <select
-            id="pullBudget"
-            class="dropdown"
-            [value]="pullBudget()"
-            (change)="onPullBudgetChange($event)"
-            [disabled]="isPlaying()"
-          >
-            @for (option of pullBudgetOptions; track option) {
-              <option [value]="option">{{ option }}</option>
-            }
-          </select>
+        <div class="viz-panel">
+          <div class="viz-header">
+            <span>Tiered Gossip Learning (TGL)</span>
+            <span class="viz-badge tgl">TGL</span>
+          </div>
+          <div class="canvas-area">
+            <app-network-canvas networkType="tgl"></app-network-canvas>
+            <div class="stage-indicator">{{ stageBadgeText() }}</div>
+          </div>
         </div>
       </div>
-    </section>
 
-    <!-- Info Banner Content (Compact Vertical) -->
-    <app-info-banner></app-info-banner>
+      <!-- Bottom Stats Bar -->
+      <div class="stats-bar">
+        <!-- Legend Items (Left) -->
+        <div class="legend-stat-item" title="Nodes that have received the update and are sharing it with others">
+          <div class="legend-dot" style="background: #22c55e;"></div>
+          <span class="legend-label">Has Update</span>
+        </div>
+        <div class="legend-stat-item" title="Nodes that have not yet received the update">
+          <div class="legend-dot" style="background: #3b82f6;"></div>
+          <span class="legend-label">Inactive Node</span>
+        </div>
 
-    <!-- Legend -->
-    <section class="sidebar-section">
-      <div class="section-title">Legend</div>
-      <div class="legend-items">
-        @for (item of legendItems; track item.label) {
-          <div class="legend-item">
-            <div class="legend-dot" [style.background]="item.color"></div>
-            <span>{{ item.label }}</span>
+        <div class="comparison-divider"></div>
+
+        <!-- P2P Stats -->
+        <div class="stat-group">
+          <div class="stat-item"
+            title="Current round number in the P2P network. Each round represents one complete cycle of message propagation.">
+            <span class="stat-label">P2P Round</span>
+            <span class="stat-value baseline">{{ p2pRound() }}</span>
           </div>
+          <div class="stat-item"
+            title="Total number of messages sent in the P2P network. Lower is better for network efficiency.">
+            <span class="stat-label">P2P Messages</span>
+            <span class="stat-value baseline">{{ p2pMessages() }}</span>
+          </div>
+          <div class="stat-item"
+            title="Percentage of nodes that have received the update in the P2P network. 100% means all nodes have the information.">
+            <span class="stat-label">P2P Coverage</span>
+            <span class="stat-value baseline">{{ p2pCoverageLabel() }}</span>
+          </div>
+        </div>
+
+        <div class="comparison-divider"></div>
+
+        <!-- Comparison Metrics -->
+        <div class="comparison-metrics">
+          <div class="metric"
+            title="How many rounds ahead TGL is compared to P2P. Positive values mean TGL is faster at spreading information.">
+            <span class="metric-icon">⚡</span>
+            <div class="metric-content">
+              <span class="metric-label">Current Speed Gain</span>
+              <span class="metric-value" [class.positive]="speedGain() && speedGain()! > 0">{{ speedGainLabel()
+                }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="comparison-divider"></div>
+
+        <!-- TGL Stats -->
+        <div class="stat-group">
+          <div class="stat-item"
+            title="Current round number in the TGL network. Each round represents one complete cycle of the three-stage TGL protocol.">
+            <span class="stat-label">TGL Round</span>
+            <span class="stat-value tgl">{{ tglRound() }}</span>
+          </div>
+          <div class="stat-item"
+            title="Total number of messages sent in the TGL network. Compare with P2P Messages to see efficiency gains.">
+            <span class="stat-label">TGL Messages</span>
+            <span class="stat-value tgl">{{ tglMessages() }}</span>
+          </div>
+          <div class="stat-item"
+            title="Percentage of nodes that have received the update in the TGL network. 100% means all nodes have the information.">
+            <span class="stat-label">TGL Coverage</span>
+            <span class="stat-value tgl">{{ tglCoverageLabel() }}</span>
+          </div>
+        </div>
+
+        <div class="comparison-divider"></div>
+
+        <!-- Legend Items (Right) -->
+        <div class="legend-stat-item" title="The origin node that initiates the update propagation in each round">
+          <div class="legend-dot" style="background: #ef4444;"></div>
+          <span class="legend-label">Source Node</span>
+        </div>
+        <div class="legend-stat-item" title="TGL nodes in the relay tier that coordinate message distribution">
+          <div class="legend-dot" style="background: #ff8c00;"></div>
+          <span class="legend-label">Relay Node</span>
+        </div>
+      </div>
+    </main>
+
+    @if (showCoveragePopup()) {
+    <div class="coverage-popup-backdrop">
+      <div class="coverage-popup">
+        <p class="coverage-popup-eyebrow">Run Complete</p>
+        <h3>Coverage reached with a clear exchange gap</h3>
+        @if (completionStats(); as stats) {
+        @if (coverageDifference(); as diff) {
+        <p class="coverage-popup-body">
+          TGL reached 100% coverage with
+          <strong>{{ diff.percent }}% {{ diff.direction }}</strong>
+          exchanges than baseline P2P.
+        </p>
+        } @else {
+        <p class="coverage-popup-body">
+          TGL finished the run with measurable savings over baseline flooding.
+        </p>
         }
-      </div>
-    </section>
-  </aside>
 
-  <!-- Main Content Area -->
-  <main class="main-content">
-    <!-- Top Controls Bar -->
-    <div class="controls-bar">
-      <div class="interaction-tips">
-        <span class="tip-icon">💡</span>
-        <span class="tip-text">Scroll to zoom • Drag to rotate • Right-click to pan</span>
-      </div>
-      <div class="controls-center">
-        <div class="round-display">
-          Round: <strong>{{ currentRound() }}</strong> / {{ maxRounds() }}
-        </div>
-        <div class="playback-controls">
-          <button class="control-btn" type="button" disabled title="Previous Round">⏮</button>
-          <button class="control-btn primary" type="button" (click)="togglePlayback()" title="Play/Pause">
-            {{ isPlaying() ? '⏸' : '▶' }}
-          </button>
-          <button class="control-btn" type="button" disabled title="Next Round">⏭</button>
-          <button class="control-btn" type="button" (click)="onReset()" title="Reset">🔄</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Visualization Area -->
-    <div class="visualization">
-      <div class="viz-panel">
-        <div class="viz-header">
-          <span>Peer-to-Peer Network</span>
-          <span class="viz-badge">BASELINE</span>
-        </div>
-        <div class="canvas-area">
-          <app-network-canvas networkType="p2p"></app-network-canvas>
-        </div>
-      </div>
-
-      <div class="viz-panel">
-        <div class="viz-header">
-          <span>Tiered Gossip Learning (TGL)</span>
-          <span class="viz-badge tgl">TGL</span>
-        </div>
-        <div class="canvas-area">
-          <app-network-canvas networkType="tgl"></app-network-canvas>
-          <div class="stage-indicator">{{ stageBadgeText() }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom Stats Bar -->
-    <div class="stats-bar">
-      <!-- P2P Stats -->
-      <div class="stat-group">
-        <div class="stat-item">
-          <span class="stat-label">P2P Round</span>
-          <span class="stat-value baseline">{{ p2pRound() }}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">P2P Messages</span>
-          <span class="stat-value baseline">{{ p2pMessages() }}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">P2P Coverage</span>
-          <span class="stat-value baseline">{{ p2pCoverageLabel() }}</span>
-        </div>
-      </div>
-
-      <div class="comparison-divider"></div>
-
-      <!-- Comparison Metrics -->
-      <div class="comparison-metrics">
-        <div class="metric">
-          <span class="metric-icon">⚡</span>
-          <div class="metric-content">
-            <span class="metric-label">Current Speed Gain</span>
-            <span class="metric-value" [class.positive]="speedGain() && speedGain()! > 0">{{ speedGainLabel() }}</span>
+        <div class="coverage-popup-grid">
+          @for (stat of stats; track stat.id) {
+          <div class="coverage-card">
+            <div class="coverage-card-header">
+              <span class="coverage-card-title">{{ stat.title }}</span>
+              <span class="coverage-card-badge" [class.positive]="stat.positive === true"
+                [class.negative]="stat.positive === false">
+                {{ stat.diffLabel }}
+              </span>
+            </div>
+            <p class="coverage-card-subtitle">{{ stat.subtitle }}</p>
+            <div class="coverage-card-values">
+              <div class="coverage-card-value">
+                <span class="value-label">TGL</span>
+                <span class="value-number">{{ stat.tglValue }}</span>
+              </div>
+              <div class="coverage-card-value">
+                <span class="value-label baseline">P2P</span>
+                <span class="value-number baseline">{{ stat.p2pValue }}</span>
+              </div>
+            </div>
+            <span class="coverage-card-note">{{ stat.descriptor }}</span>
           </div>
+          }
         </div>
-      </div>
-
-      <div class="comparison-divider"></div>
-
-      <!-- TGL Stats -->
-      <div class="stat-group">
-        <div class="stat-item">
-          <span class="stat-label">TGL Round</span>
-          <span class="stat-value tgl">{{ tglRound() }}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">TGL Messages</span>
-          <span class="stat-value tgl">{{ tglMessages() }}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">TGL Coverage</span>
-          <span class="stat-value tgl">{{ tglCoverageLabel() }}</span>
-        </div>
+        } @else {
+        <p class="coverage-popup-body">
+          Coverage results are ready as soon as both simulations finish.
+        </p>
+        }
+        <button type="button" class="coverage-popup-button" (click)="dismissCoveragePopup()">
+          Continue Exploring
+        </button>
       </div>
     </div>
-  </main>
-</div>
+    }
+  </div>
 </div>

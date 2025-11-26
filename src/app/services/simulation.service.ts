@@ -211,25 +211,66 @@ export class SimulationService {
     const newTransfers: Transfer[] = [];
     let messagesSent = 0;
 
-    // Each active node sends to degreeK random neighbors
+    // Each active node sends to degreeK neighbors per round.
+    // Only ~1/3 of those are useful (targeting idle peers); the rest are redundant exchanges.
     for (const senderNode of activeNodes) {
-      // Get neighbors that haven't received data yet (IDLE state)
-      const eligibleNeighbors = senderNode.neighbors.filter((neighborId) => {
+      const totalNeighbors = senderNode.neighbors;
+      if (totalNeighbors.length === 0) {
+        continue;
+      }
+
+      // Determine how many useful vs redundant contacts to make this round
+      const targetCount = Math.min(degreeK, totalNeighbors.length);
+      const usefulCount = Math.max(1, Math.round(targetCount / 3)); // ~33% useful
+      const redundantCount = targetCount - usefulCount;
+
+      const idleNeighbors = totalNeighbors.filter((neighborId) => {
         const neighbor = newNodes.find((n) => n.id === neighborId);
         return neighbor && neighbor.state === NodeState.IDLE;
       });
 
-      // Sample up to degreeK neighbors (may be fewer if not enough eligible neighbors)
-      const targetCount = Math.min(degreeK, eligibleNeighbors.length);
-      const selectedNeighbors = sampleWithoutReplacement(eligibleNeighbors, targetCount);
+      const updatedNeighbors = totalNeighbors.filter((neighborId) => {
+        const neighbor = newNodes.find((n) => n.id === neighborId);
+        return neighbor && neighbor.state !== NodeState.IDLE;
+      });
+
+      const selectedUseful = sampleWithoutReplacement(
+        idleNeighbors,
+        Math.min(usefulCount, idleNeighbors.length)
+      );
+
+      const remainingUsefulBudget = usefulCount - selectedUseful.length;
+      if (remainingUsefulBudget > 0) {
+        const fallbackPool = updatedNeighbors.filter((id) => !selectedUseful.includes(id));
+        selectedUseful.push(
+          ...sampleWithoutReplacement(
+            fallbackPool,
+            Math.min(remainingUsefulBudget, fallbackPool.length)
+          )
+        );
+      }
+
+      const redundantPool = [
+        ...updatedNeighbors.filter((id) => !selectedUseful.includes(id)),
+        ...idleNeighbors.filter((id) => !selectedUseful.includes(id)),
+      ];
+
+      const selectedRedundant = sampleWithoutReplacement(
+        redundantPool,
+        Math.min(redundantCount, redundantPool.length)
+      );
+
+      const selectedNeighbors = [...selectedUseful, ...selectedRedundant];
 
       // Update target node states and create transfers
       for (const neighborId of selectedNeighbors) {
         const targetNode = newNodes.find((n) => n.id === neighborId);
         if (targetNode) {
-          // Update target node state
-          targetNode.state = NodeState.ACTIVE;
-          targetNode.receivedAtRound = newRound;
+          // Update target node state if it was still idle
+          if (targetNode.state === NodeState.IDLE) {
+            targetNode.state = NodeState.ACTIVE;
+            targetNode.receivedAtRound = newRound;
+          }
 
           // Create a transfer for visualization
           const transfer: Transfer = {

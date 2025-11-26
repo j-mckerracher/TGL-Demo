@@ -2,8 +2,8 @@
 <div class="sidebar-section">
   <h3 class="section-header">📊 What You're Seeing</h3>
   <p class="section-content">
-    Compare how information spreads through two network architectures. 
-    <strong>Peer-to-Peer</strong> uses direct connections, while 
+    Compare how information spreads through two network architectures.
+    <strong>Peer-to-Peer</strong> uses direct connections, while
     <strong>TGL</strong> organizes nodes for efficient propagation.
   </p>
   <p class="section-note">
@@ -11,54 +11,20 @@
   </p>
 </div>
 
-<!-- 🔷 Node Types -->
-<div class="sidebar-section">
-  <h3 class="section-header">🔷 Node Types</h3>
-  <div class="visual-indicators">
-    @for (nodeType of nodeTypes; track nodeType.label) {
-      <div class="indicator-item">
-        <div class="node-visual" [style.background]="nodeType.color">
-          <div class="node-pulse" [style.border-color]="nodeType.color"></div>
-        </div>
-        <div class="indicator-text">
-          <span class="indicator-label">{{ nodeType.label }}</span>
-          <span class="indicator-description">{{ nodeType.description }}</span>
-        </div>
-      </div>
-    }
-  </div>
-</div>
-
-<!-- 🎨 Visual Encoding -->
-<div class="sidebar-section">
-  <h3 class="section-header">🎨 Visual Encoding</h3>
-  <div class="visual-indicators">
-    @for (encoding of stateEncodings; track encoding.label) {
-      <div class="indicator-item">
-        <div class="state-visual" [style.background]="encoding.color"></div>
-        <div class="indicator-text">
-          <span class="indicator-label">{{ encoding.label }}</span>
-          <span class="indicator-description">{{ encoding.description }}</span>
-        </div>
-      </div>
-    }
-  </div>
-</div>
-
 <!-- ⚡ TGL Protocol -->
 <div class="sidebar-section">
   <h3 class="section-header">⚡ TGL Protocol</h3>
   <div class="protocol-flow">
     @for (stage of protocolStages; track stage.stage) {
-      <div class="protocol-step">
-        <div class="stage-icon" [style.background]="stage.color">
-          {{ stage.icon }}
-        </div>
-        <div class="stage-info">
-          <span class="stage-label">{{ stage.stage }}</span>
-          <span class="stage-description">{{ stage.description }}</span>
-        </div>
+    <div class="protocol-step">
+      <div class="stage-icon" [style.background]="stage.color">
+        {{ stage.icon }}
       </div>
+      <div class="stage-info">
+        <span class="stage-label">{{ stage.stage }}</span>
+        <span class="stage-description">{{ stage.description }}</span>
+      </div>
+    </div>
     }
   </div>
 </div>

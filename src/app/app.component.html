@@ -187,15 +187,15 @@
     <div class="stats-bar">
       <!-- P2P Stats -->
       <div class="stat-group">
-        <div class="stat-item" title="Latest round reached by the baseline flooding network">
+        <div class="stat-item" title="Current round number in the P2P network. Each round represents one complete cycle of message propagation.">
           <span class="stat-label">P2P Round</span>
           <span class="stat-value baseline">{{ p2pRound() }}</span>
         </div>
-        <div class="stat-item" title="Cumulative peer-to-peer message exchanges">
+        <div class="stat-item" title="Total number of messages sent in the P2P network. Lower is better for network efficiency.">
           <span class="stat-label">P2P Messages</span>
           <span class="stat-value baseline">{{ p2pMessages() }}</span>
         </div>
-        <div class="stat-item" title="Share of nodes that already received the update in the P2P network">
+        <div class="stat-item" title="Percentage of nodes that have received the update in the P2P network. 100% means all nodes have the information.">
           <span class="stat-label">P2P Coverage</span>
           <span class="stat-value baseline">{{ p2pCoverageLabel() }}</span>
         </div>
@@ -205,7 +205,7 @@
 
       <!-- Comparison Metrics -->
       <div class="comparison-metrics">
-        <div class="metric" title="Real-time speed advantage of TGL vs baseline flooding">
+        <div class="metric" title="How many rounds ahead TGL is compared to P2P. Positive values mean TGL is faster at spreading information.">
           <span class="metric-icon">⚡</span>
           <div class="metric-content">
             <span class="metric-label">Current Speed Gain</span>
@@ -218,15 +218,15 @@
 
       <!-- TGL Stats -->
       <div class="stat-group">
-        <div class="stat-item" title="Latest round reached by the Tiered Gossip Learning run">
+        <div class="stat-item" title="Current round number in the TGL network. Each round represents one complete cycle of the three-stage TGL protocol.">
           <span class="stat-label">TGL Round</span>
           <span class="stat-value tgl">{{ tglRound() }}</span>
         </div>
-        <div class="stat-item" title="Cumulative Tiered Gossip message exchanges">
+        <div class="stat-item" title="Total number of messages sent in the TGL network. Compare with P2P Messages to see efficiency gains.">
           <span class="stat-label">TGL Messages</span>
           <span class="stat-value tgl">{{ tglMessages() }}</span>
         </div>
-        <div class="stat-item" title="Share of nodes that already received the update in the TGL network">
+        <div class="stat-item" title="Percentage of nodes that have received the update in the TGL network. 100% means all nodes have the information.">
           <span class="stat-label">TGL Coverage</span>
           <span class="stat-value tgl">{{ tglCoverageLabel() }}</span>
         </div>

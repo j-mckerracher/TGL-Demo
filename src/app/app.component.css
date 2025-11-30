@@ -354,6 +354,23 @@ app-network-canvas {
   background: #0f1423;
   border-top: 1px solid #1e293b;
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.legend-row {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 24px;
+  width: 100%;
+  max-width: 1200px;
+  border-bottom: 1px solid #ffffff;
+  padding-bottom: 12px;
+}
+
+.stats-row {
+  display: flex;
   justify-content: center;
   gap: 40px;
   align-items: center;

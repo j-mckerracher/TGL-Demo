@@ -2,6 +2,27 @@
 @import './assets/styles/variables.css';
 @import './assets/styles/reset.css';
 
+/* Dashboard CSS Variables */
+:root {
+  --dash-bg-primary: #0a0e27;
+  --dash-bg-surface: #0f1423;
+  --dash-bg-elevated: #1a1f3a;
+  --dash-bg-canvas: #050810;
+  --dash-border: #1e293b;
+  --dash-border-light: #334155;
+  --dash-text: #e0e0e0;
+  --dash-text-muted: #94a3b8;
+  --dash-text-light: #cbd5e1;
+  --dash-blue: #60a5fa;
+  --dash-blue-primary: #3b82f6;
+  --dash-blue-hover: #2563eb;
+  --dash-green: #22c55e;
+  --dash-red: #ef4444;
+  --dash-yellow: #fbbf24;
+  --dash-purple: #8b5cf6;
+  --dash-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+}
+
 /* Global Styles */
 
 html,

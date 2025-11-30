@@ -45,6 +45,16 @@
                 (input)="onAverageDegreeChange($event)" [disabled]="isPlaying()" />
             </div>
           </div>
+          <div class="control-group">
+            <div class="slider-container">
+              <div class="control-row">
+                <label class="control-label">Malicious Nodes</label>
+                <span class="slider-value">{{ maliciousPercentage() }}%</span>
+              </div>
+              <input type="range" min="0" max="50" step="5" [value]="maliciousPercentage()"
+                (input)="onMaliciousPercentageChange($event)" [disabled]="isPlaying()" />
+            </div>
+          </div>
         </div>
       </section>
 

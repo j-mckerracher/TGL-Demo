@@ -118,6 +118,28 @@ export class SimulationService {
       nodes.push(node);
     }
 
+    // Mark nodes as malicious based on maliciousPercentage setting
+    const maliciousCount = this.settingsService.maliciousCount();
+    if (maliciousCount > 0) {
+      // Randomly select nodes to be malicious (excluding the source node)
+      const nodeIndices = Array.from({ length: nodeCount }, (_, i) => i);
+      // Shuffle using Fisher-Yates algorithm
+      for (let i = nodeIndices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [nodeIndices[i], nodeIndices[j]] = [nodeIndices[j], nodeIndices[i]];
+      }
+      // Mark first maliciousCount nodes as malicious (skip source node if selected)
+      let markedCount = 0;
+      for (let i = 0; i < nodeIndices.length && markedCount < maliciousCount; i++) {
+        const nodeIndex = nodeIndices[i];
+        // Don't make the source node malicious
+        if (nodeIndex !== 0) {
+          nodes[nodeIndex].isMalicious = true;
+          markedCount++;
+        }
+      }
+    }
+
     // Build k-regular neighbor connections
     // Each node connects to k neighbors based on their index sequence
     const edges: Edge[] = [];
@@ -214,6 +236,11 @@ export class SimulationService {
     // Each active node sends to degreeK neighbors per round.
     // Only ~1/3 of those are useful (targeting idle peers); the rest are redundant exchanges.
     for (const senderNode of activeNodes) {
+      // Malicious nodes drop messages - they don't forward to neighbors
+      if (senderNode.isMalicious) {
+        continue;
+      }
+
       const totalNeighbors = senderNode.neighbors;
       if (totalNeighbors.length === 0) {
         continue;
@@ -294,8 +321,10 @@ export class SimulationService {
     const nodesWithData = newNodes.filter((n) => n.state === NodeState.ACTIVE).length;
     const coverage = (nodesWithData / newNodes.length) * 100;
 
-    // Check if simulation is complete (100% coverage)
-    const isComplete = coverage >= 100;
+    // Check if simulation is complete
+    // Complete if: (1) 100% coverage OR (2) no messages sent this round (network has stagnated)
+    // Stagnation occurs when malicious nodes block all remaining propagation paths
+    const isComplete = coverage >= 100 || (messagesSent === 0 && newRound > 0);
 
     // Create new network state
     const newState: NetworkState = {
@@ -481,6 +510,28 @@ export class SimulationService {
       nodes.push(node);
     }
 
+    // Mark nodes as malicious based on maliciousPercentage setting
+    const maliciousCount = this.settingsService.maliciousCount();
+    if (maliciousCount > 0) {
+      // Randomly select nodes to be malicious (both relays and leaves)
+      const nodeIndices = Array.from({ length: totalNodes }, (_, i) => i);
+      // Shuffle using Fisher-Yates algorithm
+      for (let i = nodeIndices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [nodeIndices[i], nodeIndices[j]] = [nodeIndices[j], nodeIndices[i]];
+      }
+      // Mark first maliciousCount nodes as malicious (skip source leaf node)
+      let markedCount = 0;
+      for (let i = 0; i < nodeIndices.length && markedCount < maliciousCount; i++) {
+        const nodeIndex = nodeIndices[i];
+        // Don't make the source leaf malicious (which is at relayCount index)
+        if (nodeIndex !== relayCount) {
+          nodes[nodeIndex].isMalicious = true;
+          markedCount++;
+        }
+      }
+    }
+
     // Connect relays to each other (fully connected relay mesh)
     for (let i = 0; i < relayCount; i++) {
       for (let j = i + 1; j < relayCount; j++) {
@@ -586,6 +637,11 @@ export class SimulationService {
         const activeLeaves = newNodes.filter((node) => !node.isRelay && node.state === NodeState.ACTIVE);
 
         for (const leaf of activeLeaves) {
+          // Malicious leaves don't push messages to relays
+          if (leaf.isMalicious) {
+            continue;
+          }
+
           const relayNeighbors = leaf.neighbors
             .map((neighborId) => newNodes.find((n) => n.id === neighborId))
             .filter((neighbor): neighbor is Node => Boolean(neighbor && neighbor.isRelay));
@@ -633,6 +689,11 @@ export class SimulationService {
         );
 
         for (const relay of activeRelays) {
+          // Malicious relays don't participate in gossip
+          if (relay.isMalicious) {
+            continue;
+          }
+
           // Get other relays that are neighbors and don't have data yet
           const eligibleRelayNeighbors = relay.neighbors.filter((neighborId) => {
             const neighbor = newNodes.find((n) => n.id === neighborId);
@@ -679,6 +740,11 @@ export class SimulationService {
         );
 
         for (const relay of activeRelaysForPull) {
+          // Malicious relays don't pull leaves
+          if (relay.isMalicious) {
+            continue;
+          }
+
           const eligibleLeafNeighbors = relay.neighbors.filter((neighborId) => {
             const neighbor = newNodes.find((n) => n.id === neighborId);
             return neighbor && !neighbor.isRelay && neighbor.state === NodeState.IDLE;
@@ -723,7 +789,10 @@ export class SimulationService {
     const coverage = (nodesWithData / newNodes.length) * 100;
 
     // Check if simulation is complete
-    const isComplete = coverage >= 100;
+    // Complete if: (1) 100% coverage OR (2) starting new round with no messages sent
+    // A new round with 0 messages indicates network stagnation due to malicious nodes
+    const startingNewRound = newRound > currentState.round;
+    const isComplete = coverage >= 100 || (startingNewRound && messagesSent === 0 && newRound > 1);
 
     // Create new network state
     const newState: NetworkState = {

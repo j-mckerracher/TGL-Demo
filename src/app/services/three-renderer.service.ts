@@ -350,7 +350,7 @@ export class ThreeRendererService {
 
         // Update color based on state (if not animating, this will be overridden in updateNodeAnimations)
         if (mesh.material instanceof MeshBasicMaterial && !context.nodeAnimations.has(node.id)) {
-          mesh.material.color = this.getNodeColor(node.state, node.isRelay, isSourceNode);
+          mesh.material.color = this.getNodeColor(node.state, node.isRelay, isSourceNode, node.isMalicious);
           mesh.scale.set(1, 1, 1); // Ensure scale is reset
         }
       }
@@ -462,7 +462,7 @@ export class ThreeRendererService {
   private createNodeMesh(node: Node, isSourceNode: boolean): Mesh {
     const geometry = new SphereGeometry(0.35, 24, 24);
     const material = new MeshBasicMaterial({
-      color: this.getNodeColor(node.state, node.isRelay, isSourceNode),
+      color: this.getNodeColor(node.state, node.isRelay, isSourceNode, node.isMalicious),
     });
     const mesh = new Mesh(geometry, material);
     mesh.position.set(node.position.x, node.position.y, node.position.z);
@@ -524,13 +524,13 @@ export class ThreeRendererService {
         mesh.scale.set(1, 1, 1);
         const nodeState = context.nodeStates.get(nodeId);
         if (nodeState && node) {
-          mesh.material.color = this.getNodeColor(nodeState, node.isRelay, isSourceNode);
+          mesh.material.color = this.getNodeColor(nodeState, node.isRelay, isSourceNode, node.isMalicious);
         }
         animationsToRemove.push(nodeId);
       } else {
         // Apply easing function (ease-out cubic)
         const eased = 1 - Math.pow(1 - progress, 3);
-        
+
         // Scale animation: 1.0 -> 1.5 -> 1.0
         let scale: number;
         if (eased < 0.4) {
@@ -545,7 +545,7 @@ export class ThreeRendererService {
         // Glow effect: brighten the color
         const nodeState = context.nodeStates.get(nodeId);
         if (nodeState && node) {
-          const baseColor = this.getNodeColor(nodeState, node.isRelay, isSourceNode);
+          const baseColor = this.getNodeColor(nodeState, node.isRelay, isSourceNode, node.isMalicious);
           let glowIntensity: number;
           if (eased < 0.4) {
             // First 40%: increase brightness
@@ -669,10 +669,19 @@ export class ThreeRendererService {
   /**
    * Maps node state to color, with special handling for source and relay nodes
    */
-  private getNodeColor(state: NodeState, isRelay?: boolean, isSourceNode?: boolean): Color {
+  private getNodeColor(state: NodeState, isRelay?: boolean, isSourceNode?: boolean, isMalicious?: boolean): Color {
     // Source node always gets red color (highest priority)
     if (isSourceNode) {
       return new Color(0xef4444); // Red - Source Node
+    }
+
+    // Malicious nodes get dark red color (second priority)
+    if (isMalicious) {
+      // Use different shades of red based on state
+      if (state === NodeState.ACTIVE || state === NodeState.COMPLETED) {
+        return new Color(0xdc2626); // Darker red - Active malicious
+      }
+      return new Color(0x991b1b); // Very dark red - Idle malicious
     }
 
     // Relay nodes stay orange to remain visually distinct (unless failed)

@@ -38,6 +38,9 @@ export interface Node {
   /** Whether this node is a relay node (vs leaf node) */
   isRelay?: boolean;
 
+  /** Whether this node is malicious (drops messages) */
+  isMalicious?: boolean;
+
   /** Message budget remaining (for TGL protocol) */
   budget?: number;
 

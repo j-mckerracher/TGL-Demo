@@ -54,6 +54,7 @@ export class AppComponent implements OnInit {
   public readonly nodeCount = this.settingsService.nodeCount;
   public readonly animationSpeed = this.settingsService.animationSpeed;
   public readonly averageDegree = this.settingsService.averageDegree;
+  public readonly maliciousPercentage = this.settingsService.maliciousPercentage;
   public readonly pushBudget = this.settingsService.pushBudget;
   public readonly gossipBudget = this.settingsService.gossipBudget;
   public readonly pullBudget = this.settingsService.pullBudget;
@@ -71,6 +72,7 @@ export class AppComponent implements OnInit {
     { label: 'Has Update', color: '#22c55e' },
     { label: 'Source Node', color: '#ef4444' },
     { label: 'Relay Node', color: '#ff8c00' },
+    { label: 'Malicious Node', color: '#991b1b' },
   ];
 
   /**
@@ -256,6 +258,15 @@ export class AppComponent implements OnInit {
   public onAverageDegreeChange(event: Event): void {
     const value = Number((event.target as HTMLInputElement).value);
     this.settingsService.setAverageDegree(value);
+    this.animationService.reset();
+  }
+
+  /**
+   * Handle slider changes for malicious percentage.
+   */
+  public onMaliciousPercentageChange(event: Event): void {
+    const value = Number((event.target as HTMLInputElement).value);
+    this.settingsService.setMaliciousPercentage(value);
     this.animationService.reset();
   }
 

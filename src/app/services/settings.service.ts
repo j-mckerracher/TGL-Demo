@@ -46,6 +46,12 @@ export class SettingsService {
    */
   private readonly _leafPercentage = signal(DEFAULT_SETTINGS.leafPercentage);
 
+  /**
+   * Internal writable signal for malicious node percentage.
+   * Valid range: [0, 50]
+   */
+  private readonly _maliciousPercentage = signal(DEFAULT_SETTINGS.maliciousPercentage);
+
   // ===== TGL protocol settings =====
 
   /**
@@ -146,6 +152,12 @@ export class SettingsService {
   public readonly leafPercentage = this._leafPercentage.asReadonly();
 
   /**
+   * Percentage of malicious nodes.
+   * Valid range: [0, 50]
+   */
+  public readonly maliciousPercentage = this._maliciousPercentage.asReadonly();
+
+  /**
    * Push budget (leaf → relay attempts per stage).
    * Valid range: [1, 10]
    */
@@ -224,6 +236,14 @@ export class SettingsService {
     return this._nodeCount() - this.relayCount();
   });
 
+  /**
+   * Number of malicious nodes, computed as floor(nodeCount * maliciousPercentage / 100).
+   * Updates reactively when nodeCount or maliciousPercentage changes.
+   */
+  public readonly maliciousCount = computed(() => {
+    return Math.floor(this._nodeCount() * this._maliciousPercentage() / 100);
+  });
+
   // ===== Setter methods with validation =====
 
   /**
@@ -274,6 +294,16 @@ export class SettingsService {
     const clamped = clamp(value, 0, 100);
     this._relayPercentage.set(clamped);
     this._leafPercentage.set(100 - clamped);
+  }
+
+  /**
+   * Sets the percentage of malicious nodes.
+   * Value is clamped to [0, 50].
+   *
+   * @param value - The desired malicious percentage
+   */
+  public setMaliciousPercentage(value: number): void {
+    this._maliciousPercentage.set(clamp(value, 0, 50));
   }
 
   /**

@@ -45,6 +45,16 @@
                 (input)="onAverageDegreeChange($event)" [disabled]="isPlaying()" />
             </div>
           </div>
+          <div class="control-group">
+            <div class="slider-container">
+              <div class="control-row">
+                <label class="control-label">Malicious Nodes</label>
+                <span class="slider-value">{{ maliciousPercentage() }}%</span>
+              </div>
+              <input type="range" min="0" max="50" step="5" [value]="maliciousPercentage()"
+                (input)="onMaliciousPercentageChange($event)" [disabled]="isPlaying()" />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -138,83 +148,94 @@
 
       <!-- Bottom Stats Bar -->
       <div class="stats-bar">
-        <!-- Legend Items (Left) -->
-        <div class="legend-stat-item" title="Nodes that have received the update and are sharing it with others">
-          <div class="legend-dot" style="background: #22c55e;"></div>
-          <span class="legend-label">Has Update</span>
-        </div>
-        <div class="legend-stat-item" title="Nodes that have not yet received the update">
-          <div class="legend-dot" style="background: #3b82f6;"></div>
-          <span class="legend-label">Inactive Node</span>
-        </div>
-
-        <div class="comparison-divider"></div>
-
-        <!-- P2P Stats -->
-        <div class="stat-group">
-          <div class="stat-item"
-            title="Current round number in the P2P network. Each round represents one complete cycle of message propagation.">
-            <span class="stat-label">P2P Round</span>
-            <span class="stat-value baseline">{{ p2pRound() }}</span>
+        <!-- Legend Row -->
+        <div class="legend-row">
+          <div class="legend-stat-item" title="Nodes that have received the update and are sharing it with others">
+            <div class="legend-dot" style="background: #00ff88;"></div>
+            <span class="legend-label">Has Update</span>
           </div>
-          <div class="stat-item"
-            title="Total number of messages sent in the P2P network. Lower is better for network efficiency.">
-            <span class="stat-label">P2P Messages</span>
-            <span class="stat-value baseline">{{ p2pMessages() }}</span>
+          <div class="legend-stat-item" title="Nodes that have not yet received the update">
+            <div class="legend-dot" style="background: #4d9fff;"></div>
+            <span class="legend-label">Inactive Node</span>
           </div>
-          <div class="stat-item"
-            title="Percentage of nodes that have received the update in the P2P network. 100% means all nodes have the information.">
-            <span class="stat-label">P2P Coverage</span>
-            <span class="stat-value baseline">{{ p2pCoverageLabel() }}</span>
+          <div class="legend-stat-item" title="Nodes currently transmitting or receiving data">
+            <div class="legend-dot" style="background: #ffd700;"></div>
+            <span class="legend-label">Transmitting</span>
+          </div>
+          <div class="legend-stat-item" title="The origin node that initiates the update propagation in each round">
+            <div class="legend-dot" style="background: #bb66ff;"></div>
+            <span class="legend-label">Source Node</span>
+          </div>
+          <div class="legend-stat-item" title="TGL nodes in the relay tier that coordinate message distribution">
+            <div class="legend-dot" style="background: #ff9933;"></div>
+            <span class="legend-label">Relay Node</span>
+          </div>
+          <div class="legend-stat-item" title="Malicious nodes that may disrupt the network">
+            <div class="legend-dot" style="background: #ff1a75;"></div>
+            <span class="legend-label">Malicious Node</span>
+          </div>
+          <div class="legend-stat-item" title="Nodes that have failed or are not functioning">
+            <div class="legend-dot" style="background: #ff3333;"></div>
+            <span class="legend-label">Failed Node</span>
           </div>
         </div>
 
-        <div class="comparison-divider"></div>
-
-        <!-- Comparison Metrics -->
-        <div class="comparison-metrics">
-          <div class="metric"
-            title="How many rounds ahead TGL is compared to P2P. Positive values mean TGL is faster at spreading information.">
-            <span class="metric-icon">⚡</span>
-            <div class="metric-content">
-              <span class="metric-label">Current Speed Gain</span>
-              <span class="metric-value" [class.positive]="speedGain() && speedGain()! > 0">{{ speedGainLabel()
-                }}</span>
+        <!-- Stats Row -->
+        <div class="stats-row">
+          <!-- P2P Stats -->
+          <div class="stat-group">
+            <div class="stat-item"
+              title="Current round number in the P2P network. Each round represents one complete cycle of message propagation.">
+              <span class="stat-label">P2P Round</span>
+              <span class="stat-value baseline">{{ p2pRound() }}</span>
+            </div>
+            <div class="stat-item"
+              title="Total number of messages sent in the P2P network. Lower is better for network efficiency.">
+              <span class="stat-label">P2P Messages</span>
+              <span class="stat-value baseline">{{ p2pMessages() }}</span>
+            </div>
+            <div class="stat-item"
+              title="Percentage of nodes that have received the update in the P2P network. 100% means all nodes have the information.">
+              <span class="stat-label">P2P Coverage</span>
+              <span class="stat-value baseline">{{ p2pCoverageLabel() }}</span>
             </div>
           </div>
-        </div>
 
-        <div class="comparison-divider"></div>
+          <div class="comparison-divider"></div>
 
-        <!-- TGL Stats -->
-        <div class="stat-group">
-          <div class="stat-item"
-            title="Current round number in the TGL network. Each round represents one complete cycle of the three-stage TGL protocol.">
-            <span class="stat-label">TGL Round</span>
-            <span class="stat-value tgl">{{ tglRound() }}</span>
+          <!-- Comparison Metrics -->
+          <div class="comparison-metrics">
+            <div class="metric"
+              title="How many rounds ahead TGL is compared to P2P. Positive values mean TGL is faster at spreading information.">
+              <span class="metric-icon">⚡</span>
+              <div class="metric-content">
+                <span class="metric-label">Current Speed Gain</span>
+                <span class="metric-value" [class.positive]="speedGain() && speedGain()! > 0">{{ speedGainLabel()
+                  }}</span>
+              </div>
+            </div>
           </div>
-          <div class="stat-item"
-            title="Total number of messages sent in the TGL network. Compare with P2P Messages to see efficiency gains.">
-            <span class="stat-label">TGL Messages</span>
-            <span class="stat-value tgl">{{ tglMessages() }}</span>
-          </div>
-          <div class="stat-item"
-            title="Percentage of nodes that have received the update in the TGL network. 100% means all nodes have the information.">
-            <span class="stat-label">TGL Coverage</span>
-            <span class="stat-value tgl">{{ tglCoverageLabel() }}</span>
-          </div>
-        </div>
 
-        <div class="comparison-divider"></div>
+          <div class="comparison-divider"></div>
 
-        <!-- Legend Items (Right) -->
-        <div class="legend-stat-item" title="The origin node that initiates the update propagation in each round">
-          <div class="legend-dot" style="background: #ef4444;"></div>
-          <span class="legend-label">Source Node</span>
-        </div>
-        <div class="legend-stat-item" title="TGL nodes in the relay tier that coordinate message distribution">
-          <div class="legend-dot" style="background: #ff8c00;"></div>
-          <span class="legend-label">Relay Node</span>
+          <!-- TGL Stats -->
+          <div class="stat-group">
+            <div class="stat-item"
+              title="Current round number in the TGL network. Each round represents one complete cycle of the three-stage TGL protocol.">
+              <span class="stat-label">TGL Round</span>
+              <span class="stat-value tgl">{{ tglRound() }}</span>
+            </div>
+            <div class="stat-item"
+              title="Total number of messages sent in the TGL network. Compare with P2P Messages to see efficiency gains.">
+              <span class="stat-label">TGL Messages</span>
+              <span class="stat-value tgl">{{ tglMessages() }}</span>
+            </div>
+            <div class="stat-item"
+              title="Percentage of nodes that have received the update in the TGL network. 100% means all nodes have the information.">
+              <span class="stat-label">TGL Coverage</span>
+              <span class="stat-value tgl">{{ tglCoverageLabel() }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </main>

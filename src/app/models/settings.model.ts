@@ -31,6 +31,9 @@ export interface Settings {
   /** Percentage of leaf nodes (0-100) */
   leafPercentage: number;
 
+  /** Percentage of malicious nodes (0-50) */
+  maliciousPercentage: number;
+
   // TGL protocol settings
   /** Number of leaf → relay push attempts per stage */
   pushBudget: number;
@@ -80,6 +83,7 @@ export const DEFAULT_SETTINGS: Settings = {
   // Node distribution (should sum to 100)
   relayPercentage: 20,
   leafPercentage: 80,
+  maliciousPercentage: 0,
 
   // TGL budgets
   pushBudget: 3,

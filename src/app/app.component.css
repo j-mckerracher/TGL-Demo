@@ -354,6 +354,23 @@ app-network-canvas {
   background: #0f1423;
   border-top: 1px solid #1e293b;
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.legend-row {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 24px;
+  width: 100%;
+  max-width: 1200px;
+  border-bottom: 1px solid #ffffff;
+  padding-bottom: 12px;
+}
+
+.stats-row {
+  display: flex;
   justify-content: center;
   gap: 40px;
   align-items: center;
@@ -372,15 +389,17 @@ app-network-canvas {
 
 .coverage-popup {
   width: min(420px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
   background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.98));
   border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 20px;
-  padding: 28px;
+  padding: 24px;
   box-shadow: 0 30px 60px rgba(15, 23, 42, 0.65);
   color: #e2e8f0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .coverage-popup-eyebrow {
@@ -398,7 +417,7 @@ app-network-canvas {
 }
 
 .coverage-popup-body {
-  margin: 0 0 20px 0;
+  margin: 0 0 16px 0;
   font-size: 15px;
   line-height: 1.5;
   color: #cbd5f5;
@@ -430,11 +449,11 @@ app-network-canvas {
 .coverage-card {
   border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 16px;
-  padding: 16px;
+  padding: 14px;
   background: rgba(15, 23, 42, 0.7);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .coverage-card-header {

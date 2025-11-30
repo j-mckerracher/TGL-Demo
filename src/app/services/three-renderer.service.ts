@@ -670,9 +670,9 @@ export class ThreeRendererService {
    * Maps node state to color, with special handling for source and relay nodes
    */
   private getNodeColor(state: NodeState, isRelay?: boolean, isSourceNode?: boolean, isMalicious?: boolean): Color {
-    // Source node always gets red color (highest priority)
+    // Source node always gets purple color (highest priority)
     if (isSourceNode) {
-      return new Color(0xef4444); // Red - Source Node
+      return new Color(0xa855f7); // Purple - Source Node
     }
 
     // Malicious nodes get dark red color (second priority)
@@ -687,7 +687,7 @@ export class ThreeRendererService {
     // Relay nodes stay orange to remain visually distinct (unless failed)
     if (isRelay && !isSourceNode) {
       if (state === NodeState.FAILED) {
-        return new Color(0xef4444);
+        return new Color(0xdc2626); // Red - Failed
       }
       return new Color(0xff8c00); // Dark Orange - Relay Node
     }
@@ -705,7 +705,7 @@ export class ThreeRendererService {
       case NodeState.COMPLETED:
         return new Color(0x22c55e); // Green - Has Update
       case NodeState.FAILED:
-        return new Color(0xef4444); // Red
+        return new Color(0xdc2626); // Red - Failed
       default:
         return new Color(0x3b82f6); // Default blue
     }

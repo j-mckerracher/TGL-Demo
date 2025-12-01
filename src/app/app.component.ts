@@ -140,7 +140,7 @@ export class AppComponent implements OnInit {
       }),
       this.createCompletionStatCard({
         id: 'communication',
-        title: 'Communication',
+        title: 'Comm.',
         subtitle: 'Rounds to reach coverage',
         tglRawValue: comparison.tgl.totalRounds,
         p2pRawValue: comparison.flooding.totalRounds,
